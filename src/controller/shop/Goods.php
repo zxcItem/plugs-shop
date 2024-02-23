@@ -2,7 +2,7 @@
 
 declare (strict_types=1);
 
-namespace app\shop\controller\shop;
+namespace plugin\shop\controller\shop;
 
 
 

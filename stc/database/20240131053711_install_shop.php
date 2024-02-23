@@ -56,7 +56,12 @@ class InstallShop extends Migrator
      */
     protected function _create_insertMenu()
     {
-        PhinxExtend::write2menu(Service::menu(), ['node' => 'plugin-shop/base.config/index']);
+        PhinxExtend::write2menu([
+            [
+                'name' => '商城管理',
+                'subs' => Service::menu(),
+            ],
+        ], ['node' => 'plugin-shop/base.config/index']);
     }
 
     /**
