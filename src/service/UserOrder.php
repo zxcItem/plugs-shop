@@ -202,26 +202,43 @@ class UserOrder
     /**
      * 订单支付发放余额
      * @param string $orderNo
+     * @param bool $unlock
      * @return string
      * @throws Exception
      */
-    public static function confirm(string $orderNo): string
+    public static function confirm(string $orderNo,bool $unlock = false): string
     {
         $map = [['status', '>=', 4], ['order_no', '=', $orderNo]];
         $order = ShopOrder::mk()->where($map)->findOrEmpty();
         if ($order->isEmpty()) throw new Exception('订单状态异常');
         $code = "CZ{$order['order_no']}";
         // 确认奖励余额
-        if ($order['reward_balance'] > 0) {
+        if ($order['reward_balance'] > 0 && ConfigService::get('enable_balance')) {
             $remark = "来自订单 {$order['order_no']} 奖励 {$order['reward_balance']} 余额";
-            BalanceService::create($order['unid'], $code, '购物奖励余额', floatval($order['reward_balance']), $remark, true);
+            BalanceService::create($order['unid'], $code, '购物奖励余额', floatval($order['reward_balance']), $remark, $unlock);
         }
         // 确认奖励积分
-        if ($order['reward_integral'] > 0) {
+        if ($order['reward_integral'] > 0 && ConfigService::get('enable_integral')) {
             $remark = "来自订单 {$order['order_no']} 奖励 {$order['reward_integral']} 积分";
-            IntegralService::create($order['unid'], $code, '购物奖励积分', floatval($order['reward_integral']), $remark, true);
+            IntegralService::create($order['unid'], $code, '购物奖励积分', floatval($order['reward_integral']), $remark, $unlock);
         }
         // 返回奖励单号
         return $code;
     }
+
+    /**
+     * 订单收货 解锁积分余额
+     * @param string $order
+     * @return void
+     */
+    public static function orderConfirm(string $order)
+    {
+        ShopOrderSend::mk()->where(['order_no'=>$order])->save(['status'=>3]);
+        try { /* 解锁订单余额积分奖励 */
+            static::confirm($order, true);
+        } catch (\Exception $exception) {
+            trace_file($exception);
+        }
+    }
+
 }

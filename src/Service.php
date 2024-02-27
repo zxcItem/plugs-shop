@@ -4,7 +4,10 @@ declare (strict_types=1);
 
 namespace plugin\shop;
 
+use plugin\payment\model\PaymentRecord;
 use plugin\shop\command\Clear;
+use plugin\shop\model\ShopOrder;
+use plugin\shop\service\UserOrder;
 use think\admin\Plugin;
 
 /**
@@ -33,6 +36,26 @@ class Service extends Plugin
     public function register(): void
     {
         $this->commands([Clear::class]);
+
+        // 注册支付完成事件
+        $this->app->event->listen('PluginPaymentSuccess', function (PaymentRecord $payment) {
+            $this->app->log->notice("Event PluginPaymentSuccess {$payment->getAttr('order_no')}");
+            $order = ShopOrder::mk()->where(['order_no' => $payment->getAttr('order_no')])->findOrEmpty();
+            $order->isExists() && UserOrder::payment($order, $payment);
+        });
+
+        // 注册支付取消事件
+        $this->app->event->listen('PluginPaymentCancel', function (PaymentRecord $payment) {
+            $this->app->log->notice("Event PluginPaymentCancel {$payment->getAttr('order_no')}");
+            $order = ShopOrder::mk()->where(['order_no' => $payment->getAttr('order_no')])->findOrEmpty();
+            $order->isExists() && UserOrder::payment($order, $payment);
+        });
+
+        // 注册订单确认事件
+        $this->app->event->listen('PluginPaymentConfirm', function ($data) {
+            $this->app->log->notice("Event PluginPaymentConfirm {$data['order_no']}");
+            UserOrder::orderConfirm($data['order_no']);
+        });
     }
 
     /**

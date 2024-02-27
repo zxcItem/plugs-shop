@@ -13,6 +13,8 @@ use plugin\shop\controller\api\Auth;
 use plugin\shop\model\ShopOrder;
 use plugin\shop\model\ShopOrderCart;
 use plugin\shop\model\ShopOrderItem;
+use plugin\shop\model\ShopOrderSend;
+use plugin\shop\service\ConfigService;
 use plugin\shop\service\ExpressService;
 use plugin\shop\service\GoodsService;
 use plugin\shop\service\UserOrder;
@@ -159,8 +161,6 @@ class Order extends Auth
                 ShopOrderCart::mk()->whereIn('id', $carts)->delete();
                 UserAction::recount($this->unid);
             }
-            // 触发订单创建事件
-            $this->app->event->trigger('PluginWemallOrderCreate', $order);
             // 无需发货且无需支付，直接完成支付流程
             if ($order['status'] === 2 && empty($order['amount_real'])) {
                 Payment::emptyPayment($this->account, $order['order_no']);
@@ -287,6 +287,7 @@ class Order extends Auth
 
             // 积分抵扣处理
             if ($leaveAmount > 0 && $data['integral'] > 0) {
+                if (!ConfigService::get('enable_integral')) $this->error("已禁用积分抵扣！");
                 if ($data['integral'] > $order->getAttr('allow_integral')) $this->error("超出积分抵扣！");
                 if ($data['integral'] > IntegralService::recount($this->unid)['usable']) $this->error('账号积分不足！');
                 $response = Payment::mk(payment::INTEGRAL)->create($this->account, $data['order_no'], '账号积分抵扣', $orderAmount, $data['integral']);
@@ -295,6 +296,7 @@ class Order extends Auth
 
             // 余额支付扣减
             if ($leaveAmount > 0 && $data['balance'] > 0) {
+                if (!ConfigService::get('enable_balance')) $this->error("已禁用余额支付！");
                 if ($data['balance'] > $order->getAttr('allow_balance')) $this->error("超出余额限额！");
                 if ($data['balance'] > BalanceService::recount($this->unid)['usable']) $this->error('账号余额不足！');
                 $response = Payment::mk(Payment::BALANCE)->create($this->account, $data['order_no'], '账号余额支付！', $orderAmount, $data['balance']);
@@ -348,7 +350,7 @@ class Order extends Auth
             if ($order->save($data) && UserOrder::stock($order->getAttr('order_no'))) {
                 // 触发订单取消事件
                 Payment::refund($order->getAttr('order_no'));
-                $this->app->event->trigger('PluginWemallOrderCancel', $order);
+                $this->app->event->trigger('PluginPaymentCancel', $order);
                 // 返回处理成功数据
                 $this->success('取消成功！');
             } else {
@@ -395,7 +397,7 @@ class Order extends Auth
         $order = $this->getOrderModel();
         if ($order->getAttr('status') == 5 && $order->save(['status' => 6])) {
             // 触发订单确认事件
-
+            $this->app->event->trigger('PluginPaymentConfirm', $order);
             // 返回处理成功数据
             $this->success('确认成功！');
         } else {
