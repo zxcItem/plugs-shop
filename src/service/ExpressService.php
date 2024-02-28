@@ -4,7 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\service;
 
-use plugin\shop\model\ShopPostageTemplate;
+use plugin\shop\model\ShopExpressTemplate;
 use think\admin\Exception;
 use think\admin\service\InterfaceService;
 
@@ -30,7 +30,7 @@ class ExpressService
         if (in_array('FREE', $codes)) return [0, $deliveryCount, '', '免费包邮'];
         if (empty($codes)) throw new Exception('邮费模板为空');
         $where = [['status', '=', 1], ['deleted', '=', 0], ['code', 'in', $codes]];
-        $template = ShopPostageTemplate::mk()->where($where)->order('sort desc,id desc')->findOrEmpty();
+        $template = ShopExpressTemplate::mk()->where($where)->order('sort desc,id desc')->findOrEmpty();
         if ($template->isEmpty()) throw new Exception('邮费模板无效');
         $config = $template['normal'] ?? [];
         foreach ($template['content'] ?? [] as $item) {

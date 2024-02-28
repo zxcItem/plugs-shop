@@ -6,8 +6,8 @@ declare (strict_types=1);
 namespace plugin\shop\controller\shop;
 
 use plugin\account\model\AccountUser;
-use plugin\shop\model\ShopPostageCompany;
-use plugin\shop\model\ShopPostageTemplate;
+use plugin\shop\model\ShopExpressCompany;
+use plugin\shop\model\ShopExpressTemplate;
 use plugin\shop\model\ShopOrder;
 use plugin\shop\model\ShopOrderSend;
 use plugin\shop\service\ExpressService;
@@ -107,9 +107,9 @@ class Send extends Controller
     {
         if ($this->request->isGet()) {
             $map = ['code' => $vo['delivery_code'], 'status' => 1, 'deleted' => 0];
-            $delivery = ShopPostageTemplate::mk()->where($map)->findOrEmpty();
+            $delivery = ShopExpressTemplate::mk()->where($map)->findOrEmpty();
             if ($delivery->isEmpty() || empty($this->items = $delivery->getAttr('company'))) {
-                $this->items = ShopPostageCompany::items();
+                $this->items = ShopExpressCompany::items();
             }
         } elseif ($this->request->isPost()) {
             $map = ['order_no' => $vo['order_no']];
@@ -118,7 +118,7 @@ class Send extends Controller
 
             // 配送快递公司填写
             $map = ['code' => $vo['company_code']];
-            $company = ShopPostageCompany::mk()->where($map)->findOrEmpty();
+            $company = ShopExpressCompany::mk()->where($map)->findOrEmpty();
             if ($company->isEmpty()) $this->error('配送快递公司异常，请重新选择快递公司！');
 
             // 追加表单数据

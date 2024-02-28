@@ -4,7 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\base\express;
 
-use plugin\shop\model\ShopPostageCompany;
+use plugin\shop\model\ShopExpressCompany;
 use plugin\shop\service\ExpressService;
 use think\admin\Controller;
 use think\admin\helper\QueryHelper;
@@ -31,7 +31,7 @@ class Company extends Controller
     public function index()
     {
         $this->type = $this->get['type'] ?? 'index';
-        ShopPostageCompany::mQuery()->layTable(function () {
+        ShopExpressCompany::mQuery()->layTable(function () {
             $this->title = '快递公司管理';
         }, function (QueryHelper $query) {
             $query->like('name,code')->equal('status')->dateBetween('create_at');
@@ -46,7 +46,7 @@ class Company extends Controller
     public function add()
     {
         $this->title = '添加快递公司';
-        ShopPostageCompany::mForm('form');
+        ShopExpressCompany::mForm('form');
     }
 
     /**
@@ -56,7 +56,7 @@ class Company extends Controller
     public function edit()
     {
         $this->title = '编辑快递公司';
-        ShopPostageCompany::mForm('form');
+        ShopExpressCompany::mForm('form');
     }
 
     /**
@@ -65,7 +65,7 @@ class Company extends Controller
      */
     public function state()
     {
-        ShopPostageCompany::mSave($this->_vali([
+        ShopExpressCompany::mSave($this->_vali([
             'status.in:0,1'  => '状态值范围异常！',
             'status.require' => '状态值不能为空！',
         ]));
@@ -77,7 +77,7 @@ class Company extends Controller
      */
     public function remove()
     {
-        ShopPostageCompany::mDelete();
+        ShopExpressCompany::mDelete();
     }
 
     /**
@@ -89,7 +89,7 @@ class Company extends Controller
         try {
             $result = ExpressService::company();
             if (empty($result['code'])) $this->error($result['info']);
-            foreach ($result['data'] as $vo) ShopPostageCompany::mUpdate([
+            foreach ($result['data'] as $vo) ShopExpressCompany::mUpdate([
                 'name' => $vo['title'], 'code' => $vo['code_2'], 'deleted' => 0,
             ], 'code');
             $this->success('同步快递公司成功！');

@@ -48,8 +48,8 @@ class InstallShop extends Migrator
         $this->_create_shop_action_collect();   // 商城-用户-收藏
         $this->_create_shop_action_history();   // 商城-用户-足迹
         $this->_create_shop_action_search();    // 商城-用户-搜索
-        $this->_create_shop_postage_company();  // 快递公司
-        $this->_create_shop_postage_template(); // 快递模板
+        $this->_create_shop_express_company();  // 快递公司
+        $this->_create_shop_express_template(); // 快递模板
     }
 
     /**
@@ -740,15 +740,15 @@ class InstallShop extends Migrator
 
     /**
      * 快递公司
-     * @class ShopPostageCompany
-     * @table shop_postage_company
+     * @class ShopExpressCompany
+     * @table shop_express_company
      * @return void
      */
-    private function _create_shop_postage_company()
+    private function _create_shop_express_company()
     {
 
         // 当前数据表
-        $table = 'shop_postage_company';
+        $table = 'shop_express_company';
 
         // 存在则跳过
         if ($this->hasTable($table)) return;
@@ -765,12 +765,12 @@ class InstallShop extends Migrator
             ->addColumn('deleted', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '删除状态(1已删,0未删)'])
             ->addColumn('create_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '创建时间'])
             ->addColumn('update_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '更新时间'])
-            ->addIndex('code', ['name' => 'idx_shop_postage_company_code'])
-            ->addIndex('sort', ['name' => 'idx_shop_postage_company_sort'])
-            ->addIndex('name', ['name' => 'idx_shop_postage_company_name'])
-            ->addIndex('status', ['name' => 'idx_shop_postage_company_status'])
-            ->addIndex('deleted', ['name' => 'idx_shop_postage_company_deleted'])
-            ->addIndex('create_time', ['name' => 'idx_shop_postage_company_create_time'])
+            ->addIndex('code', ['name' => 'idx_shop_express_company_code'])
+            ->addIndex('sort', ['name' => 'idx_shop_express_company_sort'])
+            ->addIndex('name', ['name' => 'idx_shop_express_company_name'])
+            ->addIndex('status', ['name' => 'idx_shop_express_company_status'])
+            ->addIndex('deleted', ['name' => 'idx_shop_express_company_deleted'])
+            ->addIndex('create_time', ['name' => 'idx_shop_express_company_create_time'])
             ->create();
 
         // 修改主键长度
@@ -779,15 +779,15 @@ class InstallShop extends Migrator
 
     /**
      * 快递模板
-     * @class ShopPostageTemplate
-     * @table shop_postage_template
+     * @class ShopExpressTemplate
+     * @table shop_express_template
      * @return void
      */
-    private function _create_shop_postage_template()
+    private function _create_shop_express_template()
     {
 
         // 当前数据表
-        $table = 'shop_postage_template';
+        $table = 'shop_express_template';
 
         // 存在则跳过
         if ($this->hasTable($table)) return;
@@ -806,12 +806,12 @@ class InstallShop extends Migrator
             ->addColumn('deleted', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '删除状态(1已删,0未删)'])
             ->addColumn('create_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '时间'])
             ->addColumn('update_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '更新时间'])
-            ->addIndex('code', ['name' => 'idx_shop_postage_template_code'])
-            ->addIndex('name', ['name' => 'idx_shop_postage_template_name'])
-            ->addIndex('sort', ['name' => 'idx_shop_postage_template_sort'])
-            ->addIndex('status', ['name' => 'idx_shop_postage_template_status'])
-            ->addIndex('deleted', ['name' => 'idx_shop_postage_template_deleted'])
-            ->addIndex('create_time', ['name' => 'idx_shop_postage_template_create_time'])
+            ->addIndex('code', ['name' => 'idx_shop_express_template_code'])
+            ->addIndex('name', ['name' => 'idx_shop_express_template_name'])
+            ->addIndex('sort', ['name' => 'idx_shop_express_template_sort'])
+            ->addIndex('status', ['name' => 'idx_shop_express_template_status'])
+            ->addIndex('deleted', ['name' => 'idx_shop_express_template_deleted'])
+            ->addIndex('create_time', ['name' => 'idx_shop_express_template_create_time'])
             ->create();
 
         // 修改主键长度

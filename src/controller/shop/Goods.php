@@ -6,7 +6,7 @@ namespace plugin\shop\controller\shop;
 
 
 
-use plugin\shop\model\ShopPostageTemplate;
+use plugin\shop\model\ShopExpressTemplate;
 use plugin\shop\model\ShopGoods;
 use plugin\shop\model\ShopGoodsCate;
 use plugin\shop\model\ShopGoodsItem;
@@ -46,7 +46,7 @@ class Goods extends Controller
             $this->title = '商品数据管理';
             $this->cates = ShopGoodsCate::items();
             $this->marks = ShopGoodsMark::items();
-            $this->deliverys = ShopPostageTemplate::items(true);
+            $this->deliverys = ShopExpressTemplate::items(true);
             $this->enableBalance = ConfigService::get('enable_balance');
             $this->enableIntegral = ConfigService::get('enable_integral');
         }, function (QueryHelper $query) {
@@ -132,7 +132,7 @@ class Goods extends Controller
             $this->marks = ShopGoodsMark::items();
             $this->cates = ShopGoodsCate::items(true);
 
-            $this->deliverys = ShopPostageTemplate::items(true);
+            $this->deliverys = ShopExpressTemplate::items(true);
             $this->enableBalance = ConfigService::get('enable_balance');
             $this->enableIntegral = ConfigService::get('enable_integral');
             $data['marks'] = $data['marks'] ?? [];

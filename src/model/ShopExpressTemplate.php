@@ -7,7 +7,7 @@ use plugin\account\model\Abs;
 /**
  * 快递模板模型
  */
-class ShopPostageTemplate extends Abs
+class ShopExpressTemplate extends Abs
 {
     /**
      * 获取快递模板数据
@@ -43,7 +43,7 @@ class ShopPostageTemplate extends Abs
     public function getCompanyAttr($value): array
     {
         [$express, $skey] = [[], 'plugin.shop.companys'];
-        $companys = sysvar($skey) ?: sysvar($skey, ShopPostageCompany::items());
+        $companys = sysvar($skey) ?: sysvar($skey, ShopExpressCompany::items());
         foreach (is_string($value) ? str2arr($value) : (array)$value as $key) {
             if (isset($companys[$key])) $express[$key] = $companys[$key];
         }

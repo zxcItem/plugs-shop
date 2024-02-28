@@ -7,7 +7,7 @@ use plugin\account\model\Abs;
 /**
  * 快递公司模型
  */
-class ShopPostageCompany extends Abs
+class ShopExpressCompany extends Abs
 {
     /**
      * 获取快递公司数据
