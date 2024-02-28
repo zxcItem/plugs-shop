@@ -35,7 +35,7 @@ class InstallShop extends Migrator
         $this->_create_insertMenu();
         $this->_create_shop_config_poster();    // 用户推广海报
         $this->_create_shop_news_item();        // 文章内容
-        $this->_create_shop_notice();           // 系统通知
+        $this->_create_shop_config_notify();    // 系统通知
         $this->_create_shop_goods();            // 商城商品
         $this->_create_shop_goods_cate();       // 商品分类
         $this->_create_shop_goods_item();       // 商城商品规格
@@ -153,15 +153,15 @@ class InstallShop extends Migrator
 
     /**
      * 创建数据对象
-     * @class ShopNotice
-     * @table shop_notice
+     * @class ShopConfigNotify
+     * @table shop_config_notify
      * @return void
      */
-    private function _create_shop_notice()
+    private function _create_shop_config_notify()
     {
 
         // 当前数据表
-        $table = 'shop_notice';
+        $table = 'shop_config_notify';
 
         // 存在则跳过
         if ($this->hasTable($table)) return;
@@ -178,9 +178,9 @@ class InstallShop extends Migrator
             ->addColumn('status', 'integer', ['limit' => 1, 'default' => 1, 'null' => true, 'comment' => '消息状态(1使用,0禁用)'])
             ->addColumn('deleted', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '删除状态'])
             ->addColumn('create_time', 'timestamp', ['default' => 'CURRENT_TIMESTAMP', 'null' => true, 'comment' => '创建时间'])
-            ->addIndex('type', ['name' => 'idx_shop_notice_type'])
-            ->addIndex('status', ['name' => 'idx_shop_notice_status'])
-            ->addIndex('deleted', ['name' => 'idx_shop_notice_deleted'])
+            ->addIndex('type', ['name' => 'idx_shop_config_notify_type'])
+            ->addIndex('status', ['name' => 'idx_shop_config_notify_status'])
+            ->addIndex('deleted', ['name' => 'idx_shop_config_notify_deleted'])
             ->save();
 
         // 修改主键长度

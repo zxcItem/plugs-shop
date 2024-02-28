@@ -72,7 +72,7 @@ class Service extends Plugin
                 'subs' => [
                     ['name' => '商城参数管理', 'icon' => 'layui-icon layui-icon-set', 'node' => "{$code}/base.config/index"],
                     ['name' => '邀请海报设置', 'icon' => 'layui-icon layui-icon-cols', 'node' => "{$code}/base.poster/index"],
-                    ['name' => '系统通知管理', 'icon' => 'layui-icon layui-icon-notice', 'node' => "{$code}/base.notice/index"],
+                    ['name' => '系统通知管理', 'icon' => 'layui-icon layui-icon-notice', 'node' => "{$code}/base.notify/index"],
                     ['name' => '文章内容管理', 'icon' => 'layui-icon layui-icon-read', 'node' => "{$code}/base.news/index"],
                 ]
             ],

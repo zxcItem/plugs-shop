@@ -2,7 +2,7 @@
 
 namespace plugin\shop\controller\base;
 
-use plugin\shop\model\ShopNotice;
+use plugin\shop\model\ShopConfigNotify;
 use think\admin\Controller;
 use think\admin\helper\QueryHelper;
 use think\db\exception\DataNotFoundException;
@@ -14,7 +14,7 @@ use think\db\exception\ModelNotFoundException;
  * Class Notify
  * @package plugin\shop\controller\base
  */
-class Notice extends Controller
+class Notify extends Controller
 {
     /**
      * 系统通知管理
@@ -26,7 +26,7 @@ class Notice extends Controller
      */
     public function index()
     {
-        ShopNotice::mQuery()->layTable(function () {
+        ShopConfigNotify::mQuery()->layTable(function () {
             $this->title = '系统通知管理';
         }, function (QueryHelper $query) {
             $query->where(['deleted' => 0]);
@@ -41,7 +41,7 @@ class Notice extends Controller
     public function add()
     {
         $this->title = '添加系统通知';
-        ShopNotice::mForm('form');
+        ShopConfigNotify::mForm('form');
     }
 
     /**
@@ -51,7 +51,7 @@ class Notice extends Controller
     public function edit()
     {
         $this->title = '编辑系统通知';
-        ShopNotice::mForm('form');
+        ShopConfigNotify::mForm('form');
     }
 
     /**
@@ -71,7 +71,7 @@ class Notice extends Controller
      */
     public function state()
     {
-        ShopNotice::mSave($this->_vali([
+        ShopConfigNotify::mSave($this->_vali([
             'status.in:0,1'  => '状态值范围异常！',
             'status.require' => '状态值不能为空！',
         ]));
@@ -83,6 +83,6 @@ class Notice extends Controller
      */
     public function remove()
     {
-        ShopNotice::mDelete();
+        ShopConfigNotify::mDelete();
     }
 }
