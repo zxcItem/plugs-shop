@@ -23,8 +23,10 @@ class Config extends Controller
     protected $rules = [
         '#'  => ['name' => '不跳转'],
         'LK' => ['name' => '自定义链接'],
-        'SL' => ['name' => '新闻资讯列表'],
-        'SP' => ['name' => '新闻资讯详情', 'node' => 'shop/shop.item/select'],
+        'NL' => ['name' => '文章内容列表'],
+        'NP' => ['name' => '文章内容详情', 'node' => 'plugin-shop/base.news/select'],
+        'SL' => ['name' => '商城商品列表'],
+        'SP' => ['name' => '商品内容详情', 'node' => 'plugin-shop/shop.goods/select'],
     ];
 
     /**

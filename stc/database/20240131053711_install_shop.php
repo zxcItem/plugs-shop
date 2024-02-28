@@ -33,7 +33,9 @@ class InstallShop extends Migrator
     public function change()
     {
         $this->_create_insertMenu();
-        $this->_create_shop_config_poster();           // 用户推广海报
+        $this->_create_shop_config_poster();    // 用户推广海报
+        $this->_create_shop_news_item();        // 文章内容
+        $this->_create_shop_notice();           // 系统通知
         $this->_create_shop_goods();            // 商城商品
         $this->_create_shop_goods_cate();       // 商品分类
         $this->_create_shop_goods_item();       // 商城商品规格
@@ -105,6 +107,84 @@ class InstallShop extends Migrator
 
         // 修改主键长度
         $this->table($table)->changeColumn('id', 'integer', ['limit' => 11, 'identity' => true]);
+    }
+
+    /**
+     * 创建数据对象
+     * @class ShopNewsItem
+     * @table shop_news_item
+     * @return void
+     */
+    private function _create_shop_news_item()
+    {
+
+        // 当前数据表
+        $table = 'shop_news_item';
+
+        // 存在则跳过
+        if ($this->hasTable($table)) return;
+
+        // 创建数据表
+        $this->table($table, [
+            'engine' => 'InnoDB', 'collation' => 'utf8mb4_general_ci', 'comment' => '数据-文章-内容',
+        ])
+            ->addColumn('code', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '文章编号'])
+            ->addColumn('name', 'string', ['limit' => 100, 'default' => '', 'null' => true, 'comment' => '文章标题'])
+            ->addColumn('mark', 'string', ['limit' => 200, 'default' => '', 'null' => true, 'comment' => '文章标签'])
+            ->addColumn('cover', 'string', ['limit' => 500, 'default' => '', 'null' => true, 'comment' => '文章封面'])
+            ->addColumn('remark', 'string', ['limit' => 500, 'default' => '', 'null' => true, 'comment' => '备注说明'])
+            ->addColumn('content', 'text', ['default' => null, 'null' => true, 'comment' => '文章内容'])
+            ->addColumn('num_like', 'integer', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '文章点赞数'])
+            ->addColumn('num_read', 'integer', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '文章阅读数'])
+            ->addColumn('num_collect', 'integer', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '文章收藏数'])
+            ->addColumn('num_comment', 'integer', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '文章评论数'])
+            ->addColumn('sort', 'integer', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '排序权重'])
+            ->addColumn('status', 'integer', ['limit' => 1, 'default' => 1, 'null' => true, 'comment' => '文章状态(1使用,0禁用)'])
+            ->addColumn('deleted', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '删除状态(0未删,1已删)'])
+            ->addColumn('create_time', 'timestamp', ['default' => 'CURRENT_TIMESTAMP', 'null' => true, 'comment' => '创建时间'])
+            ->addIndex('code', ['name' => 'idx_shop_news_item_code'])
+            ->addIndex('status', ['name' => 'idx_shop_news_item_status'])
+            ->addIndex('deleted', ['name' => 'idx_shop_news_item_deleted'])
+            ->save();
+
+        // 修改主键长度
+        $this->table($table)->changeColumn('id', 'integer', ['limit' => 20, 'identity' => true]);
+    }
+
+    /**
+     * 创建数据对象
+     * @class ShopNotice
+     * @table shop_notice
+     * @return void
+     */
+    private function _create_shop_notice()
+    {
+
+        // 当前数据表
+        $table = 'shop_notice';
+
+        // 存在则跳过
+        if ($this->hasTable($table)) return;
+
+        // 创建数据表
+        $this->table($table, [
+            'engine' => 'InnoDB', 'collation' => 'utf8mb4_general_ci', 'comment' => '数据-基础-通知',
+        ])
+            ->addColumn('type', 'string', ['limit' => 50, 'default' => '', 'null' => true, 'comment' => '消息类型'])
+            ->addColumn('name', 'string', ['limit' => 100, 'default' => '', 'null' => true, 'comment' => '消息名称'])
+            ->addColumn('content', 'text', ['default' => null, 'null' => true, 'comment' => '消息内容'])
+            ->addColumn('num_read', 'integer', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '阅读次数'])
+            ->addColumn('sort', 'integer', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '排序权重'])
+            ->addColumn('status', 'integer', ['limit' => 1, 'default' => 1, 'null' => true, 'comment' => '消息状态(1使用,0禁用)'])
+            ->addColumn('deleted', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '删除状态'])
+            ->addColumn('create_time', 'timestamp', ['default' => 'CURRENT_TIMESTAMP', 'null' => true, 'comment' => '创建时间'])
+            ->addIndex('type', ['name' => 'idx_shop_notice_type'])
+            ->addIndex('status', ['name' => 'idx_shop_notice_status'])
+            ->addIndex('deleted', ['name' => 'idx_shop_notice_deleted'])
+            ->save();
+
+        // 修改主键长度
+        $this->table($table)->changeColumn('id', 'integer', ['limit' => 20, 'identity' => true]);
     }
     
     /**

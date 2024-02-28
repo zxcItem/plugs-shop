@@ -21,8 +21,7 @@
                 {toolbar: '#SelectToolbar', title: '操作面板', width: 80, align: 'center', fixed: 'right'},
             ]]
         }).trigger('tool', function (item) {
-            let attr = ['商品详情', item.data.code, item.data.name];
-            window.setItemValue(item.data, attr.join('#'));
+            window.setItemValue(item.data.code, item.data.name);
             $.msg.closeThisModal(this);
         });
     });
