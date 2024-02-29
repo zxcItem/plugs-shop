@@ -33,8 +33,8 @@ class InstallShop extends Migrator
     public function change()
     {
         $this->_create_insertMenu();
-        $this->_create_shop_config_poster();    // 用户推广海报
         $this->_create_shop_news_item();        // 文章内容
+        $this->_create_shop_config_poster();    // 用户推广海报
         $this->_create_shop_config_notify();    // 系统通知
         $this->_create_shop_goods();            // 商城商品
         $this->_create_shop_goods_cate();       // 商品分类
