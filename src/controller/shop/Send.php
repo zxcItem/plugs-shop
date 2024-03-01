@@ -125,6 +125,9 @@ class Send extends Controller
             $vo['status'] = 2;
             $vo['company_name'] = $company['name'];
             $vo['express_time'] = $vo['express_time'] ?? date('Y-m-d H:i:s');
+            $vo['region_prov'] = $vo['form_prov'] ?? '';
+            $vo['region_city'] = $vo['form_city'] ?? '';
+            $vo['region_area'] = $vo['form_area'] ?? '';
 
             // 更新订单发货状态
             if ($order['status'] === 4) $order->save(['status' => 5]);
