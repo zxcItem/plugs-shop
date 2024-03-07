@@ -215,12 +215,12 @@ class UserOrder
         // 确认奖励余额
         if ($order['reward_balance'] > 0 && ConfigService::get('enable_balance')) {
             $remark = "来自订单 {$order['order_no']} 奖励 {$order['reward_balance']} 余额";
-            BalanceService::create($order['unid'], $code, '购物奖励余额', floatval($order['reward_balance']), $remark, $unlock);
+            BalanceService::create($order['unid'], $code, '购物奖励', floatval($order['reward_balance']), $remark, $unlock);
         }
         // 确认奖励积分
         if ($order['reward_integral'] > 0 && ConfigService::get('enable_integral')) {
             $remark = "来自订单 {$order['order_no']} 奖励 {$order['reward_integral']} 积分";
-            IntegralService::create($order['unid'], $code, '购物奖励积分', floatval($order['reward_integral']), $remark, $unlock);
+            IntegralService::create($order['unid'], $code, '购物奖励', floatval($order['reward_integral']), $remark, $unlock);
         }
         // 返回奖励单号
         return $code;

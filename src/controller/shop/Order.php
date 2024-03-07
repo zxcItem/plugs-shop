@@ -116,6 +116,7 @@ class Order extends Controller
             if (ShopOrder::mk()->strict(false)->where($map)->update($data) !== false) {
                 if (in_array($data['status'], [4, 5, 6])) {
                     $this->app->event->trigger('PluginPaymentSuccess', $data);
+                    $this->app->event->trigger('PluginMallPaymentSuccess', $data);
                     $this->success('订单审核通过成功！');
                 } else {
                     $this->app->event->trigger('PluginPaymentCancel', $order);

@@ -290,7 +290,7 @@ class Order extends Auth
                 if (!ConfigService::get('enable_integral')) $this->error("已禁用积分抵扣！");
                 if ($data['integral'] > $order->getAttr('allow_integral')) $this->error("超出积分抵扣！");
                 if ($data['integral'] > IntegralService::recount($this->unid)['usable']) $this->error('账号积分不足！');
-                $response = Payment::mk(payment::INTEGRAL)->create($this->account, $data['order_no'], '账号积分抵扣', $orderAmount, $data['integral']);
+                $response = Payment::mk(payment::INTEGRAL)->create($this->account, $data['order_no'], '积分抵扣', $orderAmount, $data['integral']);
                 if (($leaveAmount = Payment::leaveAmount($data['order_no'], $orderAmount)) <= 0) $this->success('已完成支付！', $response->toArray());
             }
 
@@ -299,7 +299,7 @@ class Order extends Auth
                 if (!ConfigService::get('enable_balance')) $this->error("已禁用余额支付！");
                 if ($data['balance'] > $order->getAttr('allow_balance')) $this->error("超出余额限额！");
                 if ($data['balance'] > BalanceService::recount($this->unid)['usable']) $this->error('账号余额不足！');
-                $response = Payment::mk(Payment::BALANCE)->create($this->account, $data['order_no'], '账号余额支付！', $orderAmount, $data['balance']);
+                $response = Payment::mk(Payment::BALANCE)->create($this->account, $data['order_no'], '余额支付', $orderAmount, $data['balance']);
                 if (($leaveAmount = Payment::leaveAmount($data['order_no'], $orderAmount)) <= 0) $this->success('已完成支付！', $response->toArray());
             }
 
@@ -398,6 +398,7 @@ class Order extends Auth
         if ($order->getAttr('status') == 5 && $order->save(['status' => 6])) {
             // 触发订单确认事件
             $this->app->event->trigger('PluginPaymentConfirm', $order);
+            $this->app->event->trigger('PluginMallPaymentConfirm', $order);
             // 返回处理成功数据
             $this->success('确认成功！');
         } else {
