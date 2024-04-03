@@ -58,7 +58,7 @@ class ShopOrder extends Abs
      */
     public function payments(): HasMany
     {
-        return $this->hasMany(PaymentRecord::class, 'order_no', 'order_no')->order('id desc');
+        return $this->hasMany(PaymentRecord::class, 'order_no', 'order_no')->order('id desc')->withoutField('payment_notify');
     }
 
     /**
