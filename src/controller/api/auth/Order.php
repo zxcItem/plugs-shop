@@ -54,7 +54,7 @@ class Order extends Auth
                 }]);
             }
             $query->in('status')->equal('order_no');
-            $query->where(['unid' => $this->unid])->order('id desc');
+            $query->where(['unid' => $this->unid,'deleted_status' => 0])->order('id desc');
             $this->success('获取订单成功！', $query->page(intval(input('page')), false, false, 10));
         });
     }
