@@ -38,7 +38,7 @@ class UserOrder
         if (empty($config['enable_reduct'])) return 0.00;
         $min = intval(($config['reduct_min'] ?? 0) * 100);
         $max = intval(($config['reduct_max'] ?? 0) * 100);
-        return rand($min, $max) / 100;
+        return mt_rand($min, $max) / 100;
     }
 
     /**
