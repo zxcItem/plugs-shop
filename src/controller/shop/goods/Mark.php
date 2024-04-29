@@ -30,7 +30,7 @@ class Mark extends Controller
         ShopGoodsMark::mQuery($this->get)->layTable(function () {
             $this->title = '商品标签管理';
         }, static function (QueryHelper $query) {
-            $query->like('name')->equal('status')->dateBetween('create_at');
+            $query->like('name')->equal('status')->dateBetween('create_time');
         });
     }
 

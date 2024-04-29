@@ -192,9 +192,6 @@ class Goods extends Controller
      * 商品库存入库
      * @auth true
      * @return void
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
      */
     public function stock()
     {
@@ -204,19 +201,26 @@ class Goods extends Controller
             if (empty($this->vo)) $this->error('无效的商品数据，请稍候再试！');
             $this->fetch();
         } else {
-            [$data, $post, $batch] = [[], $this->request->post(), CodeExtend::uniqidDate(12, 'B')];
+            $batch = CodeExtend::uniqidDate(12, 'B');
+            [$data, $post] = [[], $this->request->post()];
             if (isset($post['gcode']) && is_array($post['gcode'])) {
-                foreach (array_keys($post['gcode']) as $key) if ($post['gstock'][$key] > 0) $data[] = [
-                    'batch_no' => $batch,
-                    'ghash'    => $post['ghash'][$key],
-                    'gcode'    => $post['gcode'][$key],
-                    'gspec'    => $post['gspec'][$key],
-                    'gstock'   => $post['gstock'][$key],
-                ];
-                if (!empty($data)) {
+                foreach (array_keys($post['gcode']) as $key) {
+                    if ($post['gstock'][$key] > 0) $data[] = [
+                        'batch_no' => $batch,
+                        'ghash'    => $post['ghash'][$key],
+                        'gcode'    => $post['gcode'][$key],
+                        'gspec'    => $post['gspec'][$key],
+                        'gstock'   => $post['gstock'][$key],
+                    ];
+                }
+                if (!empty($data)) try {
                     ShopGoodsStock::mk()->saveAll($data);
                     GoodsService::stock($map['code']);
-                    $this->success('商品数据入库成功！');
+                    $this->success('商品入库成功！');
+                } catch (HttpResponseException $exception) {
+                    throw $exception;
+                } catch (\Exception $e) {
+                    trace_file($e);
                 }
             }
             $this->error('没有需要商品入库的数据！');

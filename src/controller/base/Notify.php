@@ -30,7 +30,7 @@ class Notify extends Controller
             $this->title = '系统通知管理';
         }, function (QueryHelper $query) {
             $query->where(['deleted' => 0]);
-            $query->like('name')->equal('status')->dateBetween('create_at');
+            $query->like('name')->equal('status')->dateBetween('create_time');
         });
     }
 

@@ -34,7 +34,7 @@ class Company extends Controller
         ShopExpressCompany::mQuery()->layTable(function () {
             $this->title = '快递公司管理';
         }, function (QueryHelper $query) {
-            $query->like('name,code')->equal('status')->dateBetween('create_at');
+            $query->like('name,code')->equal('status')->dateBetween('create_time');
             $query->where(['deleted' => 0, 'status' => intval($this->type === 'index')]);
         });
     }

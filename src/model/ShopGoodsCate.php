@@ -45,7 +45,7 @@ class ShopGoodsCate extends Abs
     public static function treeData(): array
     {
         $query = static::mk()->where(['status' => 1, 'deleted' => 0])->order('sort desc,id desc');
-        return DataExtend::arr2tree($query->withoutField('sort,status,deleted,create_at')->select()->toArray());
+        return DataExtend::arr2tree($query->withoutField('sort,status,deleted,create_time')->select()->toArray());
     }
 
     /**
