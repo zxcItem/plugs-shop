@@ -14,15 +14,6 @@ class ShopOrder extends AbsUser
 {
 
     /**
-     * 关联用户数据
-     * @return HasOne
-     */
-    public function user()
-    {
-        return $this->hasOne(AccountUser::class, 'id', 'unid');
-    }
-
-    /**
      * 关联推荐用户
      * @return HasOne
      */
