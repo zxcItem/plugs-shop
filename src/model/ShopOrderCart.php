@@ -2,13 +2,12 @@
 
 namespace plugin\shop\model;
 
-use plugin\account\model\Abs;
 use think\model\relation\HasOne;
 
 /**
  * 商城订单购物车模型
  */
-class ShopOrderCart extends Abs
+class ShopOrderCart extends AbsUser
 {
     /**
      * 关联产品数据

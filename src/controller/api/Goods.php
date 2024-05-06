@@ -4,6 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\api;
 
+use plugin\shop\model\ShopExpressCompany;
 use plugin\shop\model\ShopGoods;
 use plugin\shop\model\ShopGoodsCate;
 use plugin\shop\model\ShopGoodsMark;
@@ -102,5 +103,19 @@ class Goods extends Controller
             $query->field('keys')->group('keys')->cache(true, 60)->order('sort desc');
             $this->success('获取搜索热词！', ['keys' => $query->limit(0, 15)->column('keys')]);
         });
+    }
+
+    /**
+     * 获取快递公司数据
+     * @return void
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    public function express()
+    {
+        $query = ShopExpressCompany::mk()->where(['status' => 1, 'deleted' => 0]);
+        $query->field(['name' => 'text', 'code' => 'value'])->order('sort desc,id desc');
+        $this->success('获取快递公司', $query->select()->toArray());
     }
 }

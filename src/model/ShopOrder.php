@@ -2,7 +2,6 @@
 
 namespace plugin\shop\model;
 
-use plugin\account\model\Abs;
 use plugin\account\model\AccountUser;
 use plugin\payment\model\PaymentRecord;
 use think\model\relation\HasMany;
@@ -11,7 +10,7 @@ use think\model\relation\HasOne;
 /**
  * 商城订单模型
  */
-class ShopOrder extends Abs
+class ShopOrder extends AbsUser
 {
 
     /**

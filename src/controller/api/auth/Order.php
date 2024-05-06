@@ -45,11 +45,11 @@ class Order extends Auth
     {
         ShopOrder::mQuery(null, function (QueryHelper $query) {
             if (empty(input('order_no'))) {
-                $query->with('items');
+                $query->with('items')->where(['refund_status' => 0]);
             } else {
                 $query->with(['items', 'address', 'sender', 'payments' => function (Query $query) {
                     $query->where(static function (Query $query) {
-                        $query->whereOr(['payment_status' => 1, 'audit_status' => 1]);
+                        $query->whereOr(['channel_type' => Payment::VOUCHER, 'payment_status' => 1, 'audit_status' => 1]);
                     });
                 }]);
             }
@@ -270,7 +270,7 @@ class Order extends Auth
             if ($status > 3) $this->success('已完成支付！');
             if ($status === 3) $this->error('凭证待审核！');
             if ($status !== 2) $this->error('不能发起支付！');
-            if ($order->getAttr('payment_status') > 0) $this->success('已完成支付！');
+            if ($order->getAttr('status') > 3) $this->success('已完成支付！');
 
             // 订单备注内容更新
             empty($data['order_ps']) || $order->save(['order_ps' => $data['order_ps']]);
@@ -413,7 +413,7 @@ class Order extends Auth
     public function total()
     {
         $data = ['t0' => 0, 't1' => 0, 't2' => 0, 't3' => 0, 't4' => 0, 't5' => 0, 't6' => 0, 't7' => 0];
-        $query = ShopOrder::mk()->where(['unid' => $this->unid, 'deleted_status' => 0]);
+        $query = ShopOrder::mk()->where(['unid' => $this->unid, 'refund_status' => 0, 'deleted_status' => 0]);
         foreach ($query->field('status,count(1) count')->group('status')->cursor() as $item) {
             $data["t{$item['status']}"] = $item['count'];
         }

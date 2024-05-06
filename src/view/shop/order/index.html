@@ -35,7 +35,10 @@
     }
 
     let ostatus = ['已取消', '预订单', '待支付', '待审核', '待发货', '已发货', '已收货', '已评论'];
-    let ostyles = ['layui-bg-gray layui-border-red', 'layui-bg-red', 'layui-bg-orange', 'layui-bg-black', 'layui-bg-blue', 'layui-bg-green', 'layui-bg-green'];
+    let ostyles = ['layui-bg-gray layui-border-red', 'layui-bg-red', 'layui-bg-orange', 'layui-bg-black', 'layui-bg-blue', 'layui-bg-blue', 'layui-bg-green', 'layui-bg-green'];
+
+    let rstatus = ['未售后', '预订单', '待审核', '待退货', '已退货', '待退款', '已退货', '已完成'];
+    let rstyles = ['layui-bg-gray layui-border-green', 'layui-bg-gray', 'layui-bg-blue', 'layui-bg-blue', 'layui-bg-blue', 'layui-bg-blue', 'layui-bg-blue', 'layui-bg-green'];
 
     $(function () {
         $('#OrderTable').layTable({
@@ -76,7 +79,10 @@
                         let status = laytpl('<span class="layui-badge layui-badge-middle {{d.style}}" style="zoom:85%;line-height:15px;padding:3px 4px">{{d.status}}</span>').render({
                             status: ostatus[d.status], style: ostyles[d.status]
                         });
-                        return '<div class="flex">' + status + '<div class="nowrap sub-strong-blue">' + laytpl(tpls).render(d) + '</div></div>';
+                        let refund = laytpl('<span class="layui-badge layui-badge-middle {{d.style}}" style="zoom:85%;line-height:15px;padding:3px 4px">{{d.status}}</span>').render({
+                            status: rstatus[d.refund_status], style: rstyles[d.refund_status]
+                        });
+                        return '<div class="flex">' + status + refund + '<div class="nowrap sub-strong-blue">' + laytpl(tpls).render(d) + '</div></div>';
                     }
                 },
                 {
@@ -105,7 +111,7 @@
                             tpls.push('{{d.region_prov}} {{d.region_city}} {{d.region_area}} {{d.region_addr}}');
                             return laytpl(tpls.join('<br>')).render(d.address);
                         } else {
-                            return '<div class="padding-top-10 color-desc">无收货信息</div>';
+                            return '<div class="ta-pt-10 color-desc">无收货信息</div>';
                         }
                     }
                 },

@@ -89,7 +89,7 @@
                 <b>商品规格</b><span class="color-red font-s12">( 规格填写后不允许再次增加规格分组，规格图片推荐的宽高比为 5:3，成本价用于计算利润以及发放拥金 )</span>
             </span>
             <div class="margin-bottom-10" v-for="(x,$index) in specs" :key="$index">
-                <div class="goods-spec-box padding-right-10" style="background:#ddd">
+                <div class="goods-spec-box ta-pr-10" style="background:#ddd">
                     <span class="text-center goods-spec-name">分组</span>
                     <label class="label-required-null inline-block">
                         <input v-model.trim="x.name" @change="trimSpace(x,'name')" vali-name="分组" placeholder="请输入分组名称" required>

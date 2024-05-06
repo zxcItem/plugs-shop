@@ -195,35 +195,28 @@ class Goods extends Controller
      */
     public function stock()
     {
-        $map = $this->_vali(['code.require' => '编号不能为空哦！']);
+        $input = $this->_vali(['code.require' => '商品不能为空哦！']);
         if ($this->request->isGet()) {
-            $this->vo = ShopGoods::mk()->where($map)->with('items')->findOrEmpty()->toArray();
-            if (empty($this->vo)) $this->error('无效的商品数据，请稍候再试！');
-            $this->fetch();
-        } else {
-            $batch = CodeExtend::uniqidDate(12, 'B');
-            [$data, $post] = [[], $this->request->post()];
+            $this->vo = ShopGoods::mk()->where($input)->with('items')->findOrEmpty()->toArray();
+            empty($this->vo) ? $this->error('无效的商品！') : $this->fetch();
+        } else try {
+            [$data, $post, $batch] = [[], $this->request->post(), CodeExtend::uniqidDate(12, 'B')];
             if (isset($post['gcode']) && is_array($post['gcode'])) {
-                foreach (array_keys($post['gcode']) as $key) {
-                    if ($post['gstock'][$key] > 0) $data[] = [
-                        'batch_no' => $batch,
-                        'ghash'    => $post['ghash'][$key],
-                        'gcode'    => $post['gcode'][$key],
-                        'gspec'    => $post['gspec'][$key],
-                        'gstock'   => $post['gstock'][$key],
-                    ];
-                }
-                if (!empty($data)) try {
-                    ShopGoodsStock::mk()->saveAll($data);
-                    GoodsService::stock($map['code']);
-                    $this->success('商品入库成功！');
-                } catch (HttpResponseException $exception) {
-                    throw $exception;
-                } catch (\Exception $e) {
-                    trace_file($e);
-                }
+                foreach (array_keys($post['gcode']) as $key) if ($post['gstock'][$key] > 0) $data[] = [
+                    'batch_no' => $batch,
+                    'ghash'    => $post['ghash'][$key],
+                    'gcode'    => $post['gcode'][$key],
+                    'gspec'    => $post['gspec'][$key],
+                    'gstock'   => $post['gstock'][$key],
+                ];
+                empty($data) || ShopGoodsStock::mk()->saveAll($data);
             }
-            $this->error('没有需要商品入库的数据！');
+            GoodsService::stock($input['code']);
+            $this->success('库存更新成功！');
+        } catch (HttpResponseException $exception) {
+            throw $exception;
+        } catch (\Exception $e) {
+            $this->error($e->getMessage());
         }
     }
 

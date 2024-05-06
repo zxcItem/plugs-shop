@@ -34,21 +34,20 @@
 {block name='script'}
 <script>
     $(function () {
-        $('#GoodsTable').layTable({
-            even: true, width: 'full', height: 'full',
+        let $table = $('#GoodsTable').layTable({
+            even: true, height: 'full',
             sort: {field: 'sort desc,id', type: 'desc'},
-            cellExpandedMode: 'tips',
             cols: [[
                 {field: 'id', hide: true},
                 {field: 'sort', title: '排序权重', width: 100, align: 'center', sort: true, templet: '#SortInputTpl'},
                 {
-                    field: 'name', title: '商品名称', minWidth: 220, width: '20%', templet: function (d) {
+                    title: '商品名称', minWidth: 220, templet: function (d) {
                         d.html = showTableImage(d.cover, false, 'sm')
-                        return laytpl("<div class='flex'>{{-d.html}}<div class='padding-left-10 nowrap'>名称：{{d.name}}<br>编号：<b class='color-blue'>{{d.code}}</b></div></div>").render(d);
+                        return laytpl("<div class='flex'><div>{{-d.html}}</div><div class='ta-pl-10 nowrap'>名称：{{d.name}}<br>编号：<b class='color-blue'>{{d.code}}</b></div></div>").render(d);
                     }
                 },
                 {
-                    title: '价格及库存 ', minWidth: 200, width: '20%', templet: function (d) {
+                    title: '价格及库存 ', width: '20%', templet: function (d) {
                         let tpls = [];
                         tpls.push('最低售价 <b>{{Math.round(d.price_selling)}}</b> 元/件');
                         tpls.push('总库存 <b>{{d.stock_total}}</b> 件，剩余库存 <b>{{d.stock_total-d.stock_sales}}</b> 件');
@@ -85,11 +84,8 @@
         layui.form.on('switch(StatusSwitch)', function (obj) {
             let data = {code: obj.value, status: obj.elem.checked > 0 ? 1 : 0};
             $.form.load("{:url('state')}", data, 'post', function (ret) {
-                if (ret.code < 1) $.msg.error(ret.info, 3, function () {
-                    $('#GoodsTable').trigger('reload');
-                }); else {
-                    $('#GoodsTable').trigger('reload')
-                }
+                let fn = () => $table.trigger('reload');
+                ret.code < 1 ? $.msg.error(ret.info, 3, fn) : fn();
                 return false;
             }, false);
         });
@@ -98,7 +94,7 @@
 
 <!-- 数据状态切换模板 -->
 <script type="text/html" id="StatusSwitchTpl">
-    <div class="padding-top-10 block relative"></div>
+    <div class="ta-pt-10 block relative"></div>
     <!--{if auth("state")}-->
     <input type="checkbox" value="{{d.code}}" lay-skin="switch" lay-text="已上架|已下架" lay-filter="StatusSwitch" {{-d.status>0?'checked':''}}>
     <!--{else}-->

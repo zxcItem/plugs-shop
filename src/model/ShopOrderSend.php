@@ -2,14 +2,13 @@
 
 namespace plugin\shop\model;
 
-use plugin\account\model\Abs;
 use plugin\account\model\AccountUser;
 use think\model\relation\HasOne;
 
 /**
  * 商城订单配送模型
  */
-class ShopOrderSend extends Abs
+class ShopOrderSend extends AbsUser
 {
     /**
      * 关联用户数据

@@ -44,6 +44,7 @@ class InstallShop extends Migrator
         $this->_create_shop_order();            // 商城订单
         $this->_create_shop_order_cart();       // 商城订单购物车
         $this->_create_shop_order_item();       // 商城订单商品
+        $this->_create_shop_order_refund();     // 商城订单退款
         $this->_create_shop_order_send();       // 商城订单配送
         $this->_create_shop_action_collect();   // 商城-用户-收藏
         $this->_create_shop_action_history();   // 商城-用户-足迹
@@ -423,53 +424,58 @@ class InstallShop extends Migrator
         $this->table($table, [
             'engine' => 'InnoDB', 'collation' => 'utf8mb4_general_ci', 'comment' => '商城-订单-内容',
         ])
-            ->addColumn('unid', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '用户编号'])
-            ->addColumn('puid1', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '上1级代理'])
-            ->addColumn('puid2', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '上2级代理'])
-            ->addColumn('puid3', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '上3级代理'])
-            ->addColumn('order_no', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '订单单号'])
-            ->addColumn('order_ps', 'string', ['limit' => 500, 'default' => '', 'null' => true, 'comment' => '订单备注'])
-            ->addColumn('amount_cost', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '商品成本'])
-            ->addColumn('amount_real', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '实际金额'])
-            ->addColumn('amount_total', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '订单金额'])
-            ->addColumn('amount_goods', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '商品金额'])
-            ->addColumn('amount_reduct', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '随机减免'])
-            ->addColumn('amount_profit', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '销售利润'])
-            ->addColumn('amount_balance', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '余额支付'])
-            ->addColumn('amount_integral', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '积分抵扣'])
-            ->addColumn('amount_express', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '快递费用'])
-            ->addColumn('amount_discount', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '折扣后金额'])
-            ->addColumn('allow_balance', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '最大余额支付'])
-            ->addColumn('allow_integral', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '最大积分抵扣'])
-            ->addColumn('ratio_integral', 'decimal', ['precision' => 20, 'scale' => 6, 'default' => '0.000000', 'null' => true, 'comment' => '积分兑换比例'])
-            ->addColumn('number_goods', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '商品数量'])
-            ->addColumn('number_express', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '快递计数'])
-            ->addColumn('rebate_amount', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '返佣金额'])
-            ->addColumn('reward_balance', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '奖励余额'])
-            ->addColumn('reward_integral', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '奖励积分'])
-            ->addColumn('payment_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '支付时间'])
-            ->addColumn('payment_status', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '支付状态(0未支付,1已支付)'])
-            ->addColumn('payment_amount', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '实际支付'])
-            ->addColumn('delivery_type', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '物流类型(0无配送,1需配送)'])
-            ->addColumn('cancel_time', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '订单取消时间'])
-            ->addColumn('cancel_status', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '订单取消状态'])
-            ->addColumn('cancel_remark', 'string', ['limit' => 200, 'default' => '', 'null' => true, 'comment' => '订单取消描述'])
-            ->addColumn('deleted_time', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '订单删除时间'])
-            ->addColumn('deleted_status', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '订单删除状态(0未删,1已删)'])
-            ->addColumn('deleted_remark', 'string', ['limit' => 255, 'default' => '', 'null' => true, 'comment' => '订单删除描述'])
-            ->addColumn('status', 'integer', ['limit' => 1, 'default' => 1, 'null' => true, 'comment' => '订单流程状态(0已取消,1预订单,2待支付,3待审核,4待发货,5已发货,6已收货,7已评论)'])
-            ->addColumn('create_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '时间'])
-            ->addColumn('update_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '更新时间'])
-            ->addIndex('unid', ['name' => 'idx_shop_order_unid'])
-            ->addIndex('puid1', ['name' => 'idx_shop_order_puid1'])
-            ->addIndex('puid2', ['name' => 'idx_shop_order_puid2'])
-            ->addIndex('puid3', ['name' => 'idx_shop_order_puid3'])
-            ->addIndex('status', ['name' => 'idx_shop_order_status'])
-            ->addIndex('order_no', ['name' => 'idx_shop_order_order_no'])
-            ->addIndex('create_time', ['name' => 'idx_shop_order_create_time'])
-            ->addIndex('delivery_type', ['name' => 'idx_shop_order_delivery_type'])
-            ->addIndex('cancel_status', ['name' => 'idx_shop_order_cancel_status'])
-            ->addIndex('deleted_status', ['name' => 'idx_shop_order_deleted_status'])
+            ->addColumn('unid','biginteger',['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '用户编号'])
+            ->addColumn('puid1','biginteger',['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '上1级代理'])
+            ->addColumn('puid2','biginteger',['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '上2级代理'])
+            ->addColumn('puid3','biginteger',['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '上3级代理'])
+            ->addColumn('order_no','string',['limit' => 20, 'default' => '', 'null' => true, 'comment' => '订单单号'])
+            ->addColumn('order_ps','string',['limit' => 500, 'default' => '', 'null' => true, 'comment' => '订单备注'])
+            ->addColumn('amount_cost','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '商品成本'])
+            ->addColumn('amount_real','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '实际金额'])
+            ->addColumn('amount_total','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '订单金额'])
+            ->addColumn('amount_goods','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '商品金额'])
+            ->addColumn('amount_profit','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '销售利润'])
+            ->addColumn('amount_reduct','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '随机减免'])
+            ->addColumn('amount_balance','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '余额支付'])
+            ->addColumn('amount_integral','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '积分抵扣'])
+            ->addColumn('amount_payment','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '金额支付'])
+            ->addColumn('amount_express','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '快递费用'])
+            ->addColumn('amount_discount','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '折扣后金额'])
+            ->addColumn('allow_balance','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '最大余额支付'])
+            ->addColumn('allow_integral','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '最大积分抵扣'])
+            ->addColumn('ratio_integral','decimal',['precision' => 20, 'scale' => 6, 'default' => '0.000000', 'null' => true, 'comment' => '积分兑换比例'])
+            ->addColumn('number_goods','biginteger',['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '商品数量'])
+            ->addColumn('number_express','biginteger',['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '快递计数'])
+            ->addColumn('rebate_amount','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '返利金额'])
+            ->addColumn('reward_balance','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '奖励余额'])
+            ->addColumn('reward_integral','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '奖励积分'])
+            ->addColumn('payment_time','datetime',['default' => NULL, 'null' => true, 'comment' => '支付时间'])
+            ->addColumn('payment_status','integer',['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '支付状态(0未支付,1有支付)'])
+            ->addColumn('payment_amount','decimal',['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '实际支付'])
+            ->addColumn('delivery_type','integer',['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '物流类型(0无配送,1需配送)'])
+            ->addColumn('cancel_time','string',['limit' => 20, 'default' => '', 'null' => true, 'comment' => '取消时间'])
+            ->addColumn('cancel_status','integer',['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '取消状态'])
+            ->addColumn('cancel_remark','string',['limit' => 200, 'default' => '', 'null' => true, 'comment' => '取消描述'])
+            ->addColumn('deleted_time','string',['limit' => 20, 'default' => '', 'null' => true, 'comment' => '删除时间'])
+            ->addColumn('deleted_status','integer',['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '删除状态(0未删,1已删)'])
+            ->addColumn('deleted_remark','string',['limit' => 255, 'default' => '', 'null' => true, 'comment' => '删除描述'])
+            ->addColumn('refund_code','string',['limit' => 20, 'default' => NULL, 'null' => true, 'comment' => '售后单号'])
+            ->addColumn('refund_status','integer',['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '售后状态(0未售后,1预订单,2待审核,3待退货,4已退货,5待退款,6已退款,7已完成)'])
+            ->addColumn('status','integer',['limit' => 1, 'default' => 1, 'null' => true, 'comment' => '流程状态(0已取消,1预订单,2待支付,3待审核,4待发货,5已发货,6已收货,7已评论)'])
+            ->addColumn('create_time','datetime',['default' => NULL, 'null' => true, 'comment' => '创建时间'])
+            ->addColumn('update_time','datetime',['default' => NULL, 'null' => true, 'comment' => '更新时间'])
+            ->addIndex('unid', ['name' => 'i4914b9e88_unid'])
+            ->addIndex('puid1', ['name' => 'i4914b9e88_puid1'])
+            ->addIndex('puid2', ['name' => 'i4914b9e88_puid2'])
+            ->addIndex('puid3', ['name' => 'i4914b9e88_puid3'])
+            ->addIndex('status', ['name' => 'i4914b9e88_status'])
+            ->addIndex('order_no', ['name' => 'i4914b9e88_order_no'])
+            ->addIndex('create_time', ['name' => 'i4914b9e88_create_time'])
+            ->addIndex('refund_code', ['name' => 'i4914b9e88_refund_code'])
+            ->addIndex('delivery_type', ['name' => 'i4914b9e88_delivery_type'])
+            ->addIndex('cancel_status', ['name' => 'i4914b9e88_cancel_status'])
+            ->addIndex('refund_status', ['name' => 'i4914b9e88_refund_status'])
+            ->addIndex('deleted_status', ['name' => 'i4914b9e88_deleted_status'])
             ->create();
 
         // 修改主键长度
@@ -576,6 +582,63 @@ class InstallShop extends Migrator
             ->addIndex('rebate_type', ['name' => 'idx_shop_order_item_rebate_type'])
             ->addIndex('discount_id', ['name' => 'idx_shop_order_item_discount_id'])
             ->addIndex('delivery_code', ['name' => 'idx_shop_order_item_delivery_code'])
+            ->create();
+
+        // 修改主键长度
+        $this->table($table)->changeColumn('id', 'integer', ['limit' => 11, 'identity' => true]);
+    }
+
+    /**
+     * 创建数据对象
+     * @class ShopOrderRefund
+     * @table shop_order_refund
+     * @return void
+     */
+    private function _create_shop_order_refund()
+    {
+
+        // 当前数据表
+        $table = 'shop_order_refund';
+
+        // 存在则跳过
+        if ($this->hasTable($table)) return;
+
+        // 创建数据表
+        $this->table($table, [
+            'engine' => 'InnoDB', 'collation' => 'utf8mb4_general_ci', 'comment' => '商城-售后-订单',
+        ])
+            ->addColumn('unid', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '用户编号'])
+            ->addColumn('type', 'biginteger', ['limit' => 20, 'default' => 1, 'null' => true, 'comment' => '申请类型(1退货退款,2仅退款)'])
+            ->addColumn('code', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '售后单号'])
+            ->addColumn('order_no', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '订单单号'])
+            ->addColumn('reason', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '退款原因'])
+            ->addColumn('number', 'biginteger', ['limit' => 20, 'default' => 1, 'null' => true, 'comment' => '退货数量'])
+            ->addColumn('amount', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '申请金额'])
+            ->addColumn('payment_amount', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '退款支付'])
+            ->addColumn('balance_amount', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '退款余额'])
+            ->addColumn('integral_amount', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '0.00', 'null' => true, 'comment' => '退款积分'])
+            ->addColumn('payment_code', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '退款单号'])
+            ->addColumn('balance_code', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '退回单号'])
+            ->addColumn('integral_code', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '退回单号'])
+            ->addColumn('phone', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '联系电话'])
+            ->addColumn('images', 'text', ['default' => NULL, 'null' => true, 'comment' => '申请图片'])
+            ->addColumn('content', 'text', ['default' => NULL, 'null' => true, 'comment' => '申请说明'])
+            ->addColumn('remark', 'string', ['limit' => 180, 'default' => NULL, 'null' => true, 'comment' => '操作描述'])
+            ->addColumn('express_no', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '快递单号'])
+            ->addColumn('express_code', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '快递公司'])
+            ->addColumn('express_name', 'string', ['limit' => 50, 'default' => '', 'null' => true, 'comment' => '快递名称'])
+            ->addColumn('status', 'integer', ['limit' => 1, 'default' => 1, 'null' => true, 'comment' => '流程状态(0已取消,1预订单,2待审核,3待退货,4已退货,5待退款,6已退款,7已完成)'])
+            ->addColumn('status_at', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '状态变更时间'])
+            ->addColumn('status_ds', 'string', ['limit' => 200, 'default' => '', 'null' => true, 'comment' => '状态变更描述'])
+            ->addColumn('admin_by', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '后台用户'])
+            ->addColumn('create_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '创建时间'])
+            ->addColumn('update_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '更新时间'])
+            ->addIndex('unid', ['name' => 'i3c826a8cd_unid'])
+            ->addIndex('type', ['name' => 'i3c826a8cd_type'])
+            ->addIndex('code', ['name' => 'i3c826a8cd_code'])
+            ->addIndex('status', ['name' => 'i3c826a8cd_status'])
+            ->addIndex('order_no', ['name' => 'i3c826a8cd_order_no'])
+            ->addIndex('create_time', ['name' => 'i3c826a8cd_create_time'])
             ->create();
 
         // 修改主键长度

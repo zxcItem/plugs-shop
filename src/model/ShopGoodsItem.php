@@ -2,13 +2,12 @@
 
 namespace plugin\shop\model;
 
-use plugin\account\model\Abs;
 use think\model\relation\HasOne;
 
 /**
  * 商城商品规格模型
  */
-class ShopGoodsItem extends Abs
+class ShopGoodsItem extends AbsUser
 {
     /**
      * 关联商品信息

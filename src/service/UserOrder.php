@@ -57,6 +57,26 @@ class UserOrder
         return true;
     }
 
+    /**
+     * 获取订单模型
+     * @param ShopOrder|string $order
+     * @param ?integer $unid 动态绑定变量
+     * @param ?string $orderNo 动态绑定变量
+     * @return ShopOrder
+     * @throws Exception
+     */
+    public static function widthOrder($order, ?int &$unid = 0, ?string &$orderNo = ''): ShopOrder
+    {
+        if (is_string($order)) {
+            $order = ShopOrder::mk()->where(['order_no' => $order])->findOrEmpty();
+        }
+        if ($order instanceof ShopOrder) {
+            [$unid, $orderNo] = [intval($order->getAttr('unid')), $order->getAttr('order_no')];
+            return $order;
+        }
+        throw new Exception("无效订单对象！");
+    }
+
 
     /**
      * 更新订单收货地址
@@ -118,109 +138,83 @@ class UserOrder
 
     /**
      * 更新订单支付状态
-     * @param ShopOrder $order 订单模型
+     * @param ShopOrder|string $order 订单模型
      * @param PaymentRecord $payment 支付行为记录
-     * @return boolean|void
+     * @return bool|string|void|null
+     * @throws Exception
      * @remark 订单状态(0已取消,1预订单,2待支付,3待审核,4待发货,5已发货,6已收货,7已评论)
      */
-    public static function payment(ShopOrder $order, PaymentRecord $payment)
+    public static function change($order, PaymentRecord $payment)
     {
-        $orderNo = $payment->getAttr('order_no');
-        $paidAmount = Payment::paidAmount($orderNo, true);
+        $order = self::widthOrder($order);
+        if ($order->isEmpty()) return null;
 
-        // 提交支付凭证，只需更新订单状态
-        $isVoucher = $payment->getAttr('channel_type') === Payment::VOUCHER;
-        if ($isVoucher && $payment->getAttr('audit_status') === 1) return $order->save([
-            'status' => 3,
-            'payment_time' => date('Y-m-d H:i:s'),
-            'payment_amount' => $paidAmount,
-            'payment_status' => 1,
-        ]);
-
-        // 发起订单退款，标记订单已取消
-        if (empty($paidAmount) && $payment->getAttr('refund_status')) {
-            $order->save([
-                'status' => 0,
-                'payment_time' => $payment->getAttr('payment_time'),
-                'payment_amount' => $paidAmount,
-                'payment_status' => 1,
-            ]);
-            try { /* 取消订单余额积分奖励及反拥 */
-                static::cancel($orderNo, true);
-            } catch (\Exception $exception) {
-                trace_file($exception);
-            }
-        }
+        // 同步订单支付统计
+        $ptotal = Payment::totalPaymentAmount($payment->getAttr('order_no'));
+        $order->appendData([
+            'payment_time'    => $payment->getAttr('create_time'),
+            'payment_amount'  => $ptotal['amount'] ?? 0,
+            'amount_payment'  => $ptotal['payment'] ?? 0,
+            'amount_balance'  => $ptotal['balance'] ?? 0,
+            'amount_integral' => $ptotal['integral'] ?? 0,
+        ], true);
 
         // 订单已经支付完成
-        if ($paidAmount >= $order->getAttr('amount_real')) {
-            // 已完成支付
-            $order->save([
-                'status' => $order->getAttr('delivery_type') ? 4 : 5,
-                'payment_time' => $payment->getAttr('payment_time'),
-                'payment_amount' => $paidAmount,
-                'payment_status' => 1,
-            ]);
-            try { /* 奖励余额及积分 */
-                static::confirm($orderNo);
-            } catch (\Exception $exception) {
-                trace_file($exception);
-            }
+        if ($order->getAttr('payment_amount') >= $order->getAttr('amount_real')) {
+            // 已完成支付，更新订单状态
+            $status = $order->getAttr('delivery_type') ? 4 : 5;
+            $order->save(['status' => $status, 'payment_status' => 1]);
+            // 确认完成支付，发放余额积分奖励及升级返佣
+            return static::confirm($order);
         }
-        // 凭证支付审核被拒绝
-        if ($isVoucher && $payment->getAttr('audit_status') !== 1) {
-            $map = ['channel_type' => Payment::VOUCHER, 'audit_status' => 1, 'order_no' => $orderNo];
-            if (PaymentRecord::mk()->where($map)->findOrEmpty()->isEmpty()) {
-                if ($order->getAttr('status') === 3) $order->save(['status' => 2]);
-            }
+
+        // 退款或部分退款，仅更新订单支付统计
+        if ($payment->getAttr('refund_status')) {
+            return $order->save();
+        }
+
+        // 提交支付凭证，只需更新订单状态为【待审核】
+        $isVoucher = $payment->getAttr('channel_type') === Payment::VOUCHER;
+        if ($isVoucher && $payment->getAttr('audit_status') === 1) return $order->save([
+            'status' => 3, 'payment_status' => 1,
+        ]);
+
+        // 凭证支付审核被拒绝，订单回滚到未支付状态
+        if ($isVoucher && $payment->getAttr('audit_status') === 0) {
+            if ($order->getAttr('status') === 3) $order->save(['status' => 2]);
         } else {
-            $order->save(['payment_amount' => $paidAmount]);
+            $order->save();
         }
     }
 
     /**
-     * 验证订单取消余额
-     * @param string $orderNo 订单单号
-     * @param boolean $syncRebate 更新返佣
+     * 取消订单撤销奖励
+     * @param ShopOrder|string $order
+     * @param boolean $setRebate 更新返佣
      * @return string
-     * @throws Exception
      */
-    public static function cancel(string $orderNo, bool $syncRebate = false): string
+    public static function cancel($order, bool $setRebate = false): string
     {
-        $map = ['status' => 0, 'order_no' => $orderNo];
-        $order = ShopOrder::mk()->where($map)->findOrEmpty();
-        if ($order->isEmpty()) throw new Exception('订单状态异常');
-        $code = "CZ{$order['order_no']}";
-        // 取消余额奖励
-        if ($order['reward_balance'] > 0) BalanceService::cancel($code);
-        // 取消积分奖励
-        if ($order['reward_integral'] > 0) IntegralService::cancel($code);
+        try { /* 创建用户奖励 */
+            $order = UserReward::cancel($order, $code);
+        } catch (\Exception $exception) {
+            trace_file($exception);
+        }
         return $code;
     }
 
 
     /**
-     * 订单支付发放余额
-     * @param string $orderNo
-     * @param bool $unlock
+     * 支付成功发放奖励
+     * @param ShopOrder|string $order
      * @return string
-     * @throws Exception
      */
-    public static function confirm(string $orderNo,bool $unlock = false): string
+    public static function confirm($order): string
     {
-        $map = [['status', '>=', 4], ['order_no', '=', $orderNo]];
-        $order = ShopOrder::mk()->where($map)->findOrEmpty();
-        if ($order->isEmpty()) throw new Exception('订单状态异常');
-        $code = "CZ{$order['order_no']}";
-        // 确认奖励余额
-        if ($order['reward_balance'] > 0 && ConfigService::get('enable_balance')) {
-            $remark = "来自订单 {$order['order_no']} 奖励 {$order['reward_balance']} 余额";
-            BalanceService::create($order['unid'], $code, '购物奖励', floatval($order['reward_balance']), $remark, $unlock);
-        }
-        // 确认奖励积分
-        if ($order['reward_integral'] > 0 && ConfigService::get('enable_integral')) {
-            $remark = "来自订单 {$order['order_no']} 奖励 {$order['reward_integral']} 积分";
-            IntegralService::create($order['unid'], $code, '购物奖励', floatval($order['reward_integral']), $remark, $unlock);
+        try { /* 创建用户奖励 */
+            UserReward::create($order, $code);
+        } catch (\Exception $exception) {
+            trace_file($exception);
         }
         // 返回奖励单号
         return $code;
