@@ -95,15 +95,7 @@ class Service extends Plugin
                     ['name' => '快递公司管理', 'icon' => 'layui-icon layui-icon-website', 'node' => "{$code}/base.express.company/index"],
                     ['name' => '邮费模板管理', 'icon' => 'layui-icon layui-icon-template-1', 'node' => "{$code}/base.express.template/index"],
                 ],
-            ],
-            [
-                'name' => '工单管理',
-                'subs' => [
-                    ['name' => '常见问题管理', 'icon' => 'layui-icon layui-icon-star', 'node' => "{$code}/help.problem/index"],
-                    ['name' => '意见反馈管理', 'icon' => 'layui-icon layui-icon-template', 'node' => "{$code}/help.feedback/index"],
-                    ['name' => '工单提问管理', 'icon' => 'layui-icon layui-icon-transfer', 'node' => "{$code}/help.question/index"],
-                ],
-            ],
+            ]
         ];
     }
 }
