@@ -182,6 +182,7 @@ class UserOrder
         // 凭证支付审核被拒绝，订单回滚到未支付状态
         if ($isVoucher && $payment->getAttr('audit_status') === 0) {
             if ($order->getAttr('status') === 3) $order->save(['status' => 2]);
+            Library::$sapp->event->trigger('PluginWeMallOrderUpgrade', $order);
         } else {
             $order->save();
         }
@@ -200,39 +201,43 @@ class UserOrder
         } catch (\Exception $exception) {
             trace_file($exception);
         }
+        if ($setRebate) try { /* 订单返佣处理 */
+            Library::$sapp->event->trigger('PluginWeMallOrderUserRebateCancel', $order);
+        } catch (\Exception $exception) {
+            trace_file($exception);
+        }
+        try { /* 升级用户等级 */
+            Library::$sapp->event->trigger('PluginWeMallOrderUserUpgradeUpgrade', intval($order->getAttr('unid')));
+        } catch (\Exception $exception) {
+            trace_file($exception);
+        }
         return $code;
     }
 
-
     /**
      * 支付成功发放奖励
-     * @param ShopOrder|string $order
+     * @param ShopOrder $order
      * @return string
      */
-    public static function confirm($order): string
+    public static function confirm(ShopOrder $order): string
     {
         try { /* 创建用户奖励 */
             UserReward::create($order, $code);
         } catch (\Exception $exception) {
             trace_file($exception);
         }
-        // 返回奖励单号
-        return $code;
-    }
-
-    /**
-     * 订单收货 解锁积分余额
-     * @param string $order
-     * @return void
-     */
-    public static function orderConfirm(string $order)
-    {
-        ShopOrderSend::mk()->where(['order_no'=>$order])->save(['status'=>3]);
-        try { /* 解锁订单余额积分奖励 */
-            static::confirm($order, true);
+        try { /* 订单返佣处理 */
+            Library::$sapp->event->trigger('PluginWeMallUserRebateCreate', $order);
         } catch (\Exception $exception) {
             trace_file($exception);
         }
+        try { /* 升级用户等级 */
+            Library::$sapp->event->trigger('PluginWeMallUserRebateUpgrade', $order);
+        } catch (\Exception $exception) {
+            trace_file($exception);
+        }
+        // 返回奖励单号
+        return $code;
     }
 
 }

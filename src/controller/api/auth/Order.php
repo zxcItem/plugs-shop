@@ -397,8 +397,7 @@ class Order extends Auth
         $order = $this->getOrderModel();
         if ($order->getAttr('status') == 5 && $order->save(['status' => 6])) {
             // 触发订单确认事件
-            $this->app->event->trigger('PluginPaymentConfirm', $order);
-            $this->app->event->trigger('PluginMallPaymentConfirm', $order);
+            $this->app->event->trigger('PluginWeMallOrderConfirm', $order);
             // 返回处理成功数据
             $this->success('确认成功！');
         } else {

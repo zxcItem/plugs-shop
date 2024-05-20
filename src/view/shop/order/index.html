@@ -79,10 +79,7 @@
                         let status = laytpl('<span class="layui-badge layui-badge-middle {{d.style}}" style="zoom:85%;line-height:15px;padding:3px 4px">{{d.status}}</span>').render({
                             status: ostatus[d.status], style: ostyles[d.status]
                         });
-                        let refund = laytpl('<span class="layui-badge layui-badge-middle {{d.style}}" style="zoom:85%;line-height:15px;padding:3px 4px">{{d.status}}</span>').render({
-                            status: rstatus[d.refund_status], style: rstyles[d.refund_status]
-                        });
-                        return '<div class="flex">' + status + refund + '<div class="nowrap sub-strong-blue">' + laytpl(tpls).render(d) + '</div></div>';
+                        return '<div class="flex">' + status + '<div class="nowrap sub-strong-blue">' + laytpl(tpls).render(d) + '</div></div>';
                     }
                 },
                 {

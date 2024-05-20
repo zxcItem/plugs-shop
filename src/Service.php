@@ -60,12 +60,6 @@ class Service extends Plugin
             $this->app->log->notice("Event PluginPaymentCancel {$payment->getAttr('order_no')}");
             UserOrder::change($payment->getAttr('order_no'), $payment);
         });
-
-        // 注册订单确认事件
-        $this->app->event->listen('PluginPaymentConfirm', function ($data) {
-            $this->app->log->notice("Event PluginPaymentConfirm {$data['order_no']}");
-            UserOrder::orderConfirm($data['order_no']);
-        });
     }
 
     /**
