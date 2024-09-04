@@ -60,7 +60,7 @@ class ExpressService
      */
     public static function region(int $level = 3, ?int $status = null): array
     {
-        [$items, $ncodes] = [[], sysdata('shop.region.not')];
+        [$items, $ncodes] = [[], sysdata('plugin.shop.region.not')];
         foreach (json_decode(file_get_contents(syspath('public/static/plugs/jquery/area/data.json')), true) as $prov) {
             $pstat = intval(!in_array($prov['code'], $ncodes));
             if (is_null($status) || is_numeric($status) && $status === $pstat) {

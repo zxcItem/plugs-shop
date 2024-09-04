@@ -23,7 +23,7 @@ class ShopGoodsCate extends Abs
      * @throws DbException
      * @throws ModelNotFoundException
      */
-    public static function getParentData(int $max, array &$data, array $parent = []): array
+    public static function pdata(int $max, array &$data, array $parent = []): array
     {
         $items = static::mk()->where(['deleted' => 0])->order('sort desc,id asc')->select()->toArray();
         $cates = DataExtend::arr2table(empty($parent) ? $items : array_merge([$parent], $items));

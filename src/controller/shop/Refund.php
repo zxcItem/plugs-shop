@@ -4,6 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop;
 
+use plugin\payment\model\PaymentRecord;
 use plugin\payment\service\Payment;
 use plugin\shop\model\ShopOrderRefund;
 use plugin\shop\service\UserOrder;
@@ -101,6 +102,12 @@ class Refund extends Controller
                             $rcode = $refund->getAttr('balance_code') ?: Payment::withRefundCode();
                             $data['balance_code'] = $rcode;
                             $data['balance_amount'] = $amount;
+                        } elseif ($type === Payment::COUPON) {
+                            $map = ['code' => $pcode, 'channel_type' => Payment::COUPON];
+                            $coupon = PaymentRecord::mk()->where($map)->findOrEmpty()->toArray();
+                            // TODO 优惠券处理
+                            empty($coupon) || UserCoupon::resume($coupon['payment_trade']);
+                            $amount = floatval($coupon['payment_amount']);
                         } else {
                             $rcode = $refund->getAttr('payment_code') ?: Payment::withRefundCode();
                             $data['payment_code'] = $rcode;

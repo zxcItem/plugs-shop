@@ -34,7 +34,6 @@ class InstallShop extends Migrator
     {
         $this->_create_insertMenu();
         $this->_create_shop_news_item();        // 文章内容
-        $this->_create_shop_config_poster();    // 用户推广海报
         $this->_create_shop_config_notify();    // 系统通知
         $this->_create_shop_goods();            // 商城商品
         $this->_create_shop_goods_cate();       // 商品分类
@@ -49,6 +48,7 @@ class InstallShop extends Migrator
         $this->_create_shop_action_collect();   // 商城-用户-收藏
         $this->_create_shop_action_history();   // 商城-用户-足迹
         $this->_create_shop_action_search();    // 商城-用户-搜索
+        $this->_create_shop_action_comment();    // 商城-用户-评论
         $this->_create_shop_express_company();  // 快递公司
         $this->_create_shop_express_template(); // 快递模板
     }
@@ -65,49 +65,6 @@ class InstallShop extends Migrator
                 'subs' => Service::menu(),
             ],
         ], ['node' => 'plugin-shop/base.config/index']);
-    }
-
-    /**
-     * 商城-配置-海报
-     * @class ShopConfigPoster
-     * @table shop_config_poster
-     * @return void
-     */
-    private function _create_shop_config_poster()
-    {
-
-        // 当前数据表
-        $table = 'shop_config_poster';
-
-        // 存在则跳过
-        if ($this->hasTable($table)) return;
-
-        // 数据表
-        $this->table($table, [
-            'engine' => 'InnoDB', 'collation' => 'utf8mb4_general_ci', 'comment' => '商城-配置-海报',
-        ])
-            ->addColumn('code', 'string', ['limit' => 50, 'default' => '', 'null' => true, 'comment' => '推广编号'])
-            ->addColumn('name', 'string', ['limit' => 180, 'default' => '', 'null' => true, 'comment' => '推广标题'])
-            ->addColumn('levels', 'string', ['limit' => 500, 'default' => '', 'null' => true, 'comment' => '用户等级'])
-            ->addColumn('devices','string',['limit' => 500, 'default' => '', 'null' => true, 'comment' => '接口通道'])
-            ->addColumn('image', 'string', ['limit' => 500, 'default' => '', 'null' => true, 'comment' => '推广图片'])
-            ->addColumn('content', 'text', ['default' => NULL, 'null' => true, 'comment' => '二维位置'])
-            ->addColumn('remark', 'string', ['limit' => 500, 'default' => '', 'null' => true, 'comment' => '推广描述'])
-            ->addColumn('sort', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '排序权重'])
-            ->addColumn('status', 'integer', ['limit' => 1, 'default' => 1, 'null' => true, 'comment' => '激活状态(0无效,1有效)'])
-            ->addColumn('deleted', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '删除状态(1已删,0未删)'])
-            ->addColumn('create_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '时间'])
-            ->addColumn('update_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '更新时间'])
-            ->addIndex('code', ['name' => 'idx_shop_config_poster_code'])
-            ->addIndex('sort', ['name' => 'idx_shop_config_poster_sort'])
-            ->addIndex('name', ['name' => 'idx_shop_config_poster_name'])
-            ->addIndex('status', ['name' => 'idx_shop_config_poster_status'])
-            ->addIndex('deleted', ['name' => 'idx_shop_config_poster_deleted'])
-            ->addIndex('create_time', ['name' => 'idx_shop_config_poster_create_time'])
-            ->create();
-
-        // 修改主键长度
-        $this->table($table)->changeColumn('id', 'integer', ['limit' => 11, 'identity' => true]);
     }
 
     /**
@@ -802,6 +759,54 @@ class InstallShop extends Migrator
         // 修改主键长度
         $this->table($table)->changeColumn('id', 'integer', ['limit' => 11, 'identity' => true]);
     }
+
+    /**
+     * 创建数据对象
+     * @class ShopActionComment
+     * @table shop_action_comment
+     * @return void
+     */
+    private function _create_shop_action_comment()
+    {
+
+        // 当前数据表
+        $table = 'shop_action_comment';
+
+        // 存在则跳过
+        if ($this->hasTable($table)) return;
+
+        // 创建数据表
+        $this->table($table, [
+            'engine' => 'InnoDB', 'collation' => 'utf8mb4_general_ci', 'comment' => '商城-用户-评论',
+        ])
+            ->addColumn('ssid', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '所属商家'])
+            ->addColumn('unid', 'biginteger', ['limit' => 20, 'default' => 0, 'null' => true, 'comment' => '用户编号'])
+            ->addColumn('code', 'string', ['limit' => 32, 'default' => NULL, 'null' => true, 'comment' => '评论编号'])
+            ->addColumn('gcode', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '商品编号'])
+            ->addColumn('ghash', 'string', ['limit' => 32, 'default' => NULL, 'null' => true, 'comment' => '商品哈希'])
+            ->addColumn('order_no', 'string', ['limit' => 20, 'default' => '', 'null' => true, 'comment' => '订单单号'])
+            ->addColumn('rate', 'decimal', ['precision' => 20, 'scale' => 2, 'default' => '5.00', 'null' => true, 'comment' => '评论分数'])
+            ->addColumn('content', 'string', ['limit' => 200, 'default' => '', 'null' => true, 'comment' => '评论内容'])
+            ->addColumn('images', 'text', ['default' => NULL, 'null' => true, 'comment' => '评论图片'])
+            ->addColumn('status', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '评论状态(0隐藏,1显示)'])
+            ->addColumn('deleted', 'integer', ['limit' => 1, 'default' => 0, 'null' => true, 'comment' => '删除状态(0未删,1已删)'])
+            ->addColumn('create_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '创建时间'])
+            ->addColumn('update_time', 'datetime', ['default' => NULL, 'null' => true, 'comment' => '更新时间'])
+            ->addIndex('unid', ['name' => 'ie6e792cc7_unid'])
+            ->addIndex('code', ['name' => 'ie6e792cc7_code'])
+            ->addIndex('ssid', ['name' => 'ie6e792cc7_ssid'])
+            ->addIndex('ghash', ['name' => 'ie6e792cc7_ghash'])
+            ->addIndex('gcode', ['name' => 'ie6e792cc7_gcode'])
+            ->addIndex('status', ['name' => 'ie6e792cc7_status'])
+            ->addIndex('deleted', ['name' => 'ie6e792cc7_deleted'])
+            ->addIndex('order_no', ['name' => 'ie6e792cc7_order_no'])
+            ->addIndex('create_time', ['name' => 'ie6e792cc7_create_time'])
+            ->create();
+
+        // 修改主键长度
+        $this->table($table)->changeColumn('id', 'integer', ['limit' => 11, 'identity' => true]);
+    }
+
 
     /**
      * 快递公司

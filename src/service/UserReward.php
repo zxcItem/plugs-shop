@@ -48,6 +48,26 @@ abstract class UserReward
     }
 
     /**
+     * 确认发放奖励
+     * @param ShopOrder|string $order
+     * @param string|null $code 奖励编号
+     * @return ShopOrder
+     * @throws \think\admin\Exception
+     */
+    public static function confirm($order, ?string &$code = ''): ShopOrder
+    {
+        $order = UserOrder::widthOrder($order, $unid, $orderNo);
+        if ($order->isEmpty() && $order->getAttr('status') < 4) {
+            throw new Exception('订单状态异常');
+        }
+        // 生成奖励编号
+        $code = $code ?: "CZ{$order->getAttr('order_no')}";
+        BalanceService::unlock($code) && IntegralService::unlock($code);
+        // 返回订单模型
+        return $order;
+    }
+
+    /**
      * 取消订单奖励
      * @param ShopOrder|string $order
      * @param string|null $code

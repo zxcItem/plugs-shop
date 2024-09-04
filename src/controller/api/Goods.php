@@ -4,6 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\api;
 
+use plugin\shop\model\ShopActionComment;
 use plugin\shop\model\ShopExpressCompany;
 use plugin\shop\model\ShopGoods;
 use plugin\shop\model\ShopGoodsCate;
@@ -80,6 +81,30 @@ class Goods extends Controller
             'mark' => ShopGoodsMark::items(),
             'cate' => ShopGoodsCate::treeData(),
         ]);
+    }
+
+    /**
+     * 获取商品评论
+     * @return void
+     */
+    public function comments()
+    {
+        ShopActionComment::mQuery(null, function (QueryHelper $query) {
+            $query->with(['bindUser'])->equal('gcode')->order('id desc');
+            $this->success('获取评论成功！', $query->page(intval(input('page', 1)), false, false, 30));
+        });
+    }
+
+    /**
+     * 商品评论处理
+     * @param array $data
+     * @return void
+     */
+    protected function _comments_page_filter(array &$data)
+    {
+        foreach ($data as &$item) {
+            $item['user_phone'] = preg_replace('/(^\d{3})\d+(\d{3}$)/', '$1***$2', $item['user_phone']);
+        }
     }
 
     /**

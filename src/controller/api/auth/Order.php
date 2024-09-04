@@ -142,9 +142,9 @@ class Order extends Auth
             $order['amount_total'] = $order['amount_goods'];
             $order['amount_profit'] = $order['amount_real'] - $order['amount_cost'];
             // 写入商品数据
-            $this->app->db->transaction(function () use ($order, $items) {
-                ($model = ShopOrder::mk())->save($order);
-                ShopOrderItem::mk()->saveAll($items);
+            $model = ShopOrder::mk();
+            $this->app->db->transaction(function () use ($order, $items, &$model) {
+                $model->save($order) && ShopOrderItem::mk()->saveAll($items);
                 // 设置收货地址
                 if ($order['delivery_type']) {
                     $where = ['unid' => $this->unid, 'deleted' => 0];

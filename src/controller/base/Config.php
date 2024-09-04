@@ -4,6 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\base;
 
+use plugin\account\service\Account;
 use plugin\shop\service\ConfigService;
 use think\admin\Controller;
 use think\admin\Exception;
@@ -52,13 +53,25 @@ class Config extends Controller
      */
     public function params()
     {
+        $this->vo = ConfigService::get();
         if ($this->request->isGet()) {
-            $this->vo = ConfigService::get();
+            $this->enableAndroid = !!Account::field(Account::ANDROID);
             $this->fetch('index_params');
         } else {
-            ConfigService::set($this->request->post());
+            ConfigService::set(array_merge($this->vo, $this->request->post()));
             $this->success('配置更新成功！');
         }
+    }
+
+    /**
+     * 修改订单配置
+     * @auth true
+     * @return void
+     * @throws \think\admin\Exception
+     */
+    public function order()
+    {
+        $this->params();
     }
 
     /**

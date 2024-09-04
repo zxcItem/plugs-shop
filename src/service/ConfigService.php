@@ -70,8 +70,8 @@ class ConfigService
     public static function set(array $data)
     {
         // 修改前端域名处理
-        if (!empty($data['domain'])) {
-            $data['domain'] = rtrim($data['domain'], '\\/');
+        if (!empty($data['base_domain'])) {
+            $data['base_domain'] = rtrim($data['base_domain'], '\\/');
         }
         // 自动处理减免金额范围
         if (!empty($data['enable_reduct'])) {

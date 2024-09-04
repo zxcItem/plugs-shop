@@ -23,7 +23,7 @@ class Cate extends Controller
      * 最大级别
      * @var integer
      */
-    protected $maxLevel = 5;
+    protected $maxLevel = 3;
 
     /**
      * 商品分类管理
@@ -80,7 +80,7 @@ class Cate extends Controller
     {
         if ($this->request->isGet()) {
             $data['pid'] = intval($data['pid'] ?? input('pid', '0'));
-            $this->cates = ShopGoodsCate::getParentData($this->maxLevel, $data, [
+            $this->cates = ShopGoodsCate::pdata($this->maxLevel, $data, [
                 'id' => '0', 'pid' => '-1', 'name' => '顶部分类',
             ]);
         }

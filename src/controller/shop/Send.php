@@ -46,7 +46,7 @@ class Send extends Controller
         ShopOrderSend::mQuery()->layTable(function () {
             $this->title = '订单发货管理';
             $this->total = ['t0' => 0, 't1' => 0, 't2' => 0, 'ta' => 0];
-            $this->address = sysdata('shop.address');
+            $this->address = sysdata('plugin.shop.address');
             // 订单状态统计
             $order = ShopOrder::mk()->whereIn('status', $this->oStatus)->where(['delivery_type' => 1]);
             $query = ShopOrderSend::mk()->whereRaw("order_no in {$order->field('order_no')->buildSql()}");
@@ -82,10 +82,10 @@ class Send extends Controller
     public function config()
     {
         if ($this->request->isGet()) {
-            $this->vo = sysdata('shop.address');
+            $this->vo = sysdata('plugin.shop.address');
             $this->fetch();
         } else {
-            sysdata('shop.address', $this->request->post());
+            sysdata('plugin.shop.address', $this->request->post());
             $this->success('地址保存成功！');
         }
     }

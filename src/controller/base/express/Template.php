@@ -55,7 +55,7 @@ class Template extends Controller
             $this->fetch();
         } else {
             $data = $this->_vali(['nos.default' => '']);
-            sysdata('shop.region.not', str2arr($data['nos']));
+            sysdata('plugin.shop.region.not', str2arr($data['nos']));
             $this->success('修改配送区域成功！', 'javascript:history.back()');
         }
     }

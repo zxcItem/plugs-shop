@@ -146,13 +146,15 @@ class Goods extends Controller
             if (empty($data['slider'])) $this->error('轮播图片不能为空！');
             // 商品规格保存
             [$count, $items] = [0, json_decode($data['items'], true)];
-            foreach ($items as $item) $item['status'] > 0 && $count++;
-            if (empty($count)) $this->error('无效的的商品价格信息！');
             $data['marks'] = arr2str($data['marks'] ?? []);
-            $data['price_market'] = min(array_column($items, 'market'));
-            $data['price_selling'] = min(array_column($items, 'selling'));
-            $data['allow_balance'] = max(array_column($items, 'allow_balance'));
-            $data['allow_integral'] = max(array_column($items, 'allow_integral'));
+            foreach ($items as $item) if ($item['status'] > 0) {
+                $count++;
+                $data['price_market'] = min($data['price_market'] ?? $item['market'], $item['market']);
+                $data['price_selling'] = min($data['price_selling'] ?? $item['selling'], $item['selling']);
+                $data['allow_balance'] = max($data['allow_balance'] ?? $item['allow_balance'], $item['allow_balance']);
+                $data['allow_integral'] = max($data['allow_integral'] ?? $item['allow_integral'], $item['allow_integral']);
+            }
+            if (empty($count)) $this->error('无效的的商品价格信息！');
             $this->app->db->transaction(static function () use ($data, $items) {
                 // 标识所有规格无效
                 ShopGoodsItem::mk()->where(['gcode' => $data['code']])->update(['status' => 0]);

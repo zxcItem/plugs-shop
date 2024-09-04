@@ -9,6 +9,7 @@ use plugin\payment\service\Payment;
 use plugin\shop\model\ShopOrder;
 use plugin\shop\model\ShopOrderSend;
 use plugin\shop\service\UserOrder;
+use plugin\shop\service\UserRefund;
 use think\admin\Controller;
 use think\admin\extend\CodeExtend;
 use think\admin\helper\QueryHelper;
@@ -54,12 +55,13 @@ class Order extends Controller
             $this->title = '订单数据管理';
             $this->total = ['t0' => 0, 't1' => 0, 't2' => 0, 't3' => 0, 't4' => 0, 't5' => 0, 't6' => 0, 't7' => 0, 'ta' => 0];
             $this->types = ['ta' => '全部订单', 't2' => '待支付', 't3' => '待审核', 't4' => '待发货', 't5' => '已发货', 't6' => '已收货', 't7' => '已评论', 't0' => '已取消'];
-            foreach ($query->where(['deleted_status' => 0])->db()->field('status,count(1) total')->group('status')->cursor() as $vo) {
+            $this->refunds = UserRefund::states2;
+            foreach ($query->db()->field('status,count(1) total')->group('status')->cursor() as $vo) {
                 [$this->total["t{$vo['status']}"] = $vo['total'], $this->total['ta'] += $vo['total']];
             }
         }, function (QueryHelper $query) {
             $query->with(['user', 'items', 'address']);
-            $query->equal('status')->like('order_no');
+            $query->equal('status,refund_status')->like('order_no');
             $query->dateBetween('create_time,payment_time,cancel_time,delivery_type');
             // 发货信息搜索
             $db = ShopOrderSend::mQuery()->dateBetween('express_time')
@@ -115,10 +117,12 @@ class Order extends Controller
             $map = ['status' => 3, 'order_no' => $data['order_no']];
             if (ShopOrder::mk()->strict(false)->where($map)->update($data) !== false) {
                 if (in_array($data['status'], [4, 5, 6])) {
+                    // TODO 待完善单据凭证支付审核成功逻辑
                     $this->app->event->trigger('PluginPaymentSuccess', $data);
                     $this->app->event->trigger('PluginMallPaymentSuccess', $data);
                     $this->success('订单审核通过成功！');
                 } else {
+                    // TODO 待完善单据凭证支付审核驳回逻辑
                     $this->app->event->trigger('PluginPaymentCancel', $order);
                     UserOrder::stock($data['order_no']);
                     $this->success('审核驳回并取消成功！');

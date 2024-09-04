@@ -119,9 +119,8 @@ class UserOrder
         ShopOrderSend::mk()->where(['order_no' => $orderNo])->findOrEmpty()->save($extra);
         // 组装更新订单数据
         $update = ['status' => 2, 'amount_express' => $extra['delivery_amount']];
-        // 重新计算订单金额
-        $update['amount_real'] = $order->getAttr('amount_discount') + $amount - $order->getAttr('amount_reduct');
-        $update['amount_total'] = $order->getAttr('amount_goods') + $amount;
+        $update['amount_real'] = round($order->getAttr('amount_discount') + $amount - $order->getAttr('amount_reduct'), 2);
+        $update['amount_total'] = round($order->getAttr('amount_goods') + $amount, 2);
         // 支付金额不能为零
         if ($update['amount_real'] <= 0) $update['amount_real'] = 0.00;
         if ($update['amount_total'] <= 0) $update['amount_total'] = 0.00;
@@ -164,8 +163,8 @@ class UserOrder
             // 已完成支付，更新订单状态
             $status = $order->getAttr('delivery_type') ? 4 : 5;
             $order->save(['status' => $status, 'payment_status' => 1]);
-            // 确认完成支付，发放余额积分奖励及升级返佣
-            return static::confirm($order);
+            // TODO 确认完成支付，发放余额积分奖励及升级返佣
+            return static::payment($order);
         }
 
         // 退款或部分退款，仅更新订单支付统计
@@ -219,7 +218,7 @@ class UserOrder
      * @param ShopOrder $order
      * @return string
      */
-    public static function confirm(ShopOrder $order): string
+    public static function payment(ShopOrder $order): string
     {
         try { /* 创建用户奖励 */
             UserReward::create($order, $code);

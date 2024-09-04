@@ -27,4 +27,24 @@ class ShopOrderSend extends AbsUser
     {
         return $this->hasOne(ShopOrder::class, 'order_no', 'order_no')->with(['items']);
     }
+
+    /**
+     * 设置发货时间
+     * @param mixed $value
+     * @return string
+     */
+    public function setExpressTimeAttr($value): string
+    {
+        return $this->setCreateTimeAttr($value);
+    }
+
+    /**
+     * 获取发货时间
+     * @param mixed $value
+     * @return string
+     */
+    public function getExpressTimeAttr($value): string
+    {
+        return $this->getCreateTimeAttr($value);
+    }
 }
