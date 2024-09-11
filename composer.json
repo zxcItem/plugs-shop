@@ -21,7 +21,7 @@
     "extra": {
         "config": {
             "type": "module",
-            "name": "通用商城系统",
+            "name": "通用商城管理",
             "cover": "iconfont iconfont-shoplight",
             "description": "通用商城系统为普通商城基础功能,商品发布，订单发货,售后等"
         },
