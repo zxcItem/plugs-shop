@@ -1,31 +1,25 @@
 <?php
 
+declare (strict_types=1);
+
 namespace plugin\shop\model;
 
-use plugin\account\model\AccountUser;
 use think\model\relation\HasOne;
 
 /**
- * 商城订单配送模型
+ * 商城订单发货模型
+ * @class PluginShopOrderSender
+ * @package plugin\shop\model
  */
-class ShopOrderSend extends AbsUser
+class PluginShopOrderSender extends AbsUser
 {
     /**
-     * 关联用户数据
-     * @return HasOne
-     */
-    public function user(): HasOne
-    {
-        return $this->hasOne(AccountUser::class, 'id', 'unid');
-    }
-
-    /**
      * 关联订单数据
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function main(): HasOne
     {
-        return $this->hasOne(ShopOrder::class, 'order_no', 'order_no')->with(['items']);
+        return $this->hasOne(PluginShopOrder::class, 'order_no', 'order_no')->with(['items']);
     }
 
     /**

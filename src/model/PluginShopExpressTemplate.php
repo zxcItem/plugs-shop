@@ -1,18 +1,26 @@
 <?php
 
+declare (strict_types=1);
+
 namespace plugin\shop\model;
 
 use plugin\account\model\Abs;
 
 /**
- * 快递模板模型
+ * 商城快递模板数据
+ * @class PluginShopExpressTemplate
+ * @package plugin\shop\model
  */
-class ShopExpressTemplate extends Abs
+class PluginShopExpressTemplate extends Abs
 {
+
     /**
      * 获取快递模板数据
      * @param boolean $allow
      * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public static function items(bool $allow = false): array
     {
@@ -42,8 +50,8 @@ class ShopExpressTemplate extends Abs
      */
     public function getCompanyAttr($value): array
     {
-        [$express, $skey] = [[], 'plugin.shop.companys'];
-        $companys = sysvar($skey) ?: sysvar($skey, ShopExpressCompany::items());
+        [$express, $skey] = [[], 'plugin.wemall.companys'];
+        $companys = sysvar($skey) ?: sysvar($skey, PluginShopExpressCompany::items());
         foreach (is_string($value) ? str2arr($value) : (array)$value as $key) {
             if (isset($companys[$key])) $express[$key] = $companys[$key];
         }

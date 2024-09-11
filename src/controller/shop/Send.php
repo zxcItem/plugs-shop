@@ -5,11 +5,11 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop;
 
-use plugin\account\model\AccountUser;
-use plugin\shop\model\ShopExpressCompany;
-use plugin\shop\model\ShopExpressTemplate;
-use plugin\shop\model\ShopOrder;
-use plugin\shop\model\ShopOrderSend;
+use plugin\account\model\PluginAccountUser;
+use plugin\shop\model\PluginShopExpressCompany;
+use plugin\shop\model\PluginShopExpressTemplate;
+use plugin\shop\model\PluginShopOrder;
+use plugin\shop\model\PluginShopOrderSender;
 use plugin\shop\service\ExpressService;
 use think\admin\Controller;
 use think\admin\Exception;
@@ -43,13 +43,13 @@ class Send extends Controller
     public function index()
     {
         $this->type = trim(input('type', 'ta'), 't');
-        ShopOrderSend::mQuery()->layTable(function () {
+        PluginShopOrderSender::mQuery()->layTable(function () {
             $this->title = '订单发货管理';
             $this->total = ['t0' => 0, 't1' => 0, 't2' => 0, 'ta' => 0];
             $this->address = sysdata('plugin.shop.address');
             // 订单状态统计
-            $order = ShopOrder::mk()->whereIn('status', $this->oStatus)->where(['delivery_type' => 1]);
-            $query = ShopOrderSend::mk()->whereRaw("order_no in {$order->field('order_no')->buildSql()}");
+            $order = PluginShopOrder::mk()->whereIn('status', $this->oStatus)->where(['delivery_type' => 1]);
+            $query = PluginShopOrderSender::mk()->whereRaw("order_no in {$order->field('order_no')->buildSql()}");
             foreach ($query->fieldRaw('status,count(1) total')->group('status')->cursor() as $vo) {
                 $this->total["ta"] += $vo['total'];
                 $this->total["t{$vo['status']}"] = $vo['total'];
@@ -60,11 +60,11 @@ class Send extends Controller
             $query->dateBetween('create_time,express_time')->equal('status')->like('express_code,order_no');
 
             // 用户搜索查询
-            $db = AccountUser::mQuery()->like('phone|nickname#user_keys')->db();
+            $db = PluginAccountUser::mQuery()->like('phone|nickname#user_keys')->db();
             if ($db->getOptions('where')) $query->whereRaw("unid in {$db->field('id')->buildSql()}");
 
             // 订单搜索查询
-            $db = ShopOrder::mk()->whereIn('status', $this->oStatus)->where(['delivery_type' => 1]);
+            $db = PluginShopOrder::mk()->whereIn('status', $this->oStatus)->where(['delivery_type' => 1]);
             $query->whereRaw("order_no in {$db->field('order_no')->buildSql()}");
 
             // 列表选项卡状态
@@ -96,7 +96,7 @@ class Send extends Controller
      */
     public function delivery()
     {
-        ShopOrderSend::mForm('delivery_form', 'order_no');
+        PluginShopOrderSender::mForm('delivery_form', 'order_no');
     }
 
     /**
@@ -107,18 +107,18 @@ class Send extends Controller
     {
         if ($this->request->isGet()) {
             $map = ['code' => $vo['delivery_code'], 'status' => 1, 'deleted' => 0];
-            $delivery = ShopExpressTemplate::mk()->where($map)->findOrEmpty();
+            $delivery = PluginShopExpressTemplate::mk()->where($map)->findOrEmpty();
             if ($delivery->isEmpty() || empty($this->items = $delivery->getAttr('company'))) {
-                $this->items = ShopExpressCompany::items();
+                $this->items = PluginShopExpressCompany::items();
             }
         } elseif ($this->request->isPost()) {
             $map = ['order_no' => $vo['order_no']];
-            $order = ShopOrder::mk()->where($map)->findOrEmpty();
+            $order = PluginShopOrder::mk()->where($map)->findOrEmpty();
             if ($order->isEmpty()) $this->error('订单查询异常，请稍候再试！');
 
             // 配送快递公司填写
             $map = ['code' => $vo['company_code']];
-            $company = ShopExpressCompany::mk()->where($map)->findOrEmpty();
+            $company = PluginShopExpressCompany::mk()->where($map)->findOrEmpty();
             if ($company->isEmpty()) $this->error('配送快递公司异常，请重新选择快递公司！');
 
             // 追加表单数据

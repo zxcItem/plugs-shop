@@ -4,14 +4,12 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop;
 
-
-
-use plugin\shop\model\ShopExpressTemplate;
-use plugin\shop\model\ShopGoods;
-use plugin\shop\model\ShopGoodsCate;
-use plugin\shop\model\ShopGoodsItem;
-use plugin\shop\model\ShopGoodsMark;
-use plugin\shop\model\ShopGoodsStock;
+use plugin\shop\model\PluginShopExpressTemplate;
+use plugin\shop\model\PluginShopGoods;
+use plugin\shop\model\PluginShopGoodsCate;
+use plugin\shop\model\PluginShopGoodsItem;
+use plugin\shop\model\PluginShopGoodsMark;
+use plugin\shop\model\PluginShopGoodsStock;
 use plugin\shop\service\ConfigService;
 use plugin\shop\service\GoodsService;
 use think\admin\Controller;
@@ -42,11 +40,11 @@ class Goods extends Controller
     public function index()
     {
         $this->type = $this->request->get('type', 'index');
-        ShopGoods::mQuery($this->get)->layTable(function () {
+        PluginShopGoods::mQuery($this->get)->layTable(function () {
             $this->title = '商品数据管理';
-            $this->cates = ShopGoodsCate::items();
-            $this->marks = ShopGoodsMark::items();
-            $this->deliverys = ShopExpressTemplate::items(true);
+            $this->cates = PluginShopGoodsCate::items();
+            $this->marks = PluginShopGoodsMark::items();
+            $this->deliverys = PluginShopExpressTemplate::items(true);
             $this->enableBalance = ConfigService::get('enable_balance');
             $this->enableIntegral = ConfigService::get('enable_integral');
         }, function (QueryHelper $query) {
@@ -79,7 +77,7 @@ class Goods extends Controller
     {
         $this->mode = 'add';
         $this->title = '添加商品数据';
-        ShopGoods::mForm('form', 'code');
+        PluginShopGoods::mForm('form', 'code');
     }
 
     /**
@@ -90,7 +88,7 @@ class Goods extends Controller
     {
         $this->mode = 'edit';
         $this->title = '编辑商品数据';
-        ShopGoods::mForm('form', 'code');
+        PluginShopGoods::mForm('form', 'code');
     }
 
     /**
@@ -101,7 +99,7 @@ class Goods extends Controller
     {
         $this->mode = 'copy';
         $this->title = '复制编辑商品';
-        ShopGoods::mForm('form', 'code');
+        PluginShopGoods::mForm('form', 'code');
     }
 
     /**
@@ -129,16 +127,16 @@ class Goods extends Controller
             $data['code'] = CodeExtend::uniqidNumber(16, 'G');
         }
         if ($this->request->isGet()) {
-            $this->marks = ShopGoodsMark::items();
-            $this->cates = ShopGoodsCate::items(true);
+            $this->marks = PluginShopGoodsMark::items();
+            $this->cates = PluginShopGoodsCate::items(true);
 
-            $this->deliverys = ShopExpressTemplate::items(true);
+            $this->deliverys = PluginShopExpressTemplate::items(true);
             $this->enableBalance = ConfigService::get('enable_balance');
             $this->enableIntegral = ConfigService::get('enable_integral');
             $data['marks'] = $data['marks'] ?? [];
             $data['cates'] = $data['cates'] ?? [];
             $data['specs'] = json_encode($data['specs'] ?? [], 64 | 256);
-            $data['items'] = ShopGoodsItem::itemsJson($data['code']);
+            $data['items'] = PluginShopGoodsItem::itemsJson($data['code']);
             $data['slider'] = is_array($data['slider'] ?? []) ? join('|', $data['slider'] ?? []) : '';
             $data['delivery_code'] = $data['delivery_code'] ?? 'FREE';
         } elseif ($this->request->isPost()) try {
@@ -157,12 +155,12 @@ class Goods extends Controller
             if (empty($count)) $this->error('无效的的商品价格信息！');
             $this->app->db->transaction(static function () use ($data, $items) {
                 // 标识所有规格无效
-                ShopGoodsItem::mk()->where(['gcode' => $data['code']])->update(['status' => 0]);
-                $model = ShopGoods::mk()->where(['code' => $data['code']])->findOrEmpty();
+                PluginShopGoodsItem::mk()->where(['gcode' => $data['code']])->update(['status' => 0]);
+                $model = PluginShopGoods::mk()->where(['code' => $data['code']])->findOrEmpty();
                 $model->{$model->isExists() ? 'onAdminUpdate' : 'onAdminInsert'}($data['code']);
                 $model->save($data);
                 // 更新或写入商品规格
-                foreach ($items as $item) ShopGoodsItem::mUpdate([
+                foreach ($items as $item) PluginShopGoodsItem::mUpdate([
                     'gsku'            => $item['gsku'],
                     'ghash'           => $item['hash'],
                     'gcode'           => $data['code'],
@@ -199,7 +197,7 @@ class Goods extends Controller
     {
         $input = $this->_vali(['code.require' => '商品不能为空哦！']);
         if ($this->request->isGet()) {
-            $this->vo = ShopGoods::mk()->where($input)->with('items')->findOrEmpty()->toArray();
+            $this->vo = PluginShopGoods::mk()->where($input)->with('items')->findOrEmpty()->toArray();
             empty($this->vo) ? $this->error('无效的商品！') : $this->fetch();
         } else try {
             [$data, $post, $batch] = [[], $this->request->post(), CodeExtend::uniqidDate(12, 'B')];
@@ -211,7 +209,7 @@ class Goods extends Controller
                     'gspec'    => $post['gspec'][$key],
                     'gstock'   => $post['gstock'][$key],
                 ];
-                empty($data) || ShopGoodsStock::mk()->saveAll($data);
+                empty($data) || PluginShopGoodsStock::mk()->saveAll($data);
             }
             GoodsService::stock($input['code']);
             $this->success('库存更新成功！');
@@ -228,7 +226,7 @@ class Goods extends Controller
      */
     public function state()
     {
-        ShopGoods::mSave($this->_vali([
+        PluginShopGoods::mSave($this->_vali([
             'status.in:0,1'  => '状态值范围异常！',
             'status.require' => '状态值不能为空！',
         ]), 'code');
@@ -240,7 +238,7 @@ class Goods extends Controller
      */
     public function remove()
     {
-        ShopGoods::mSave($this->_vali([
+        PluginShopGoods::mSave($this->_vali([
             'code.require'  => '编号不能为空！',
             'deleted.value' => 1
         ]), 'code');

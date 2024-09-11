@@ -5,9 +5,9 @@ declare (strict_types=1);
 namespace plugin\shop\controller\api\auth;
 
 use plugin\account\controller\api\auth;
-use plugin\shop\model\ShopGoods;
-use plugin\shop\model\ShopGoodsItem;
-use plugin\shop\model\ShopOrderCart;
+use plugin\shop\model\PluginShopGoods;
+use plugin\shop\model\PluginShopGoodsItem;
+use plugin\shop\model\PluginShopOrderCart;
 use plugin\shop\service\UserAction;
 use think\admin\helper\QueryHelper;
 use think\db\exception\DbException;
@@ -26,7 +26,7 @@ class Cart extends Auth
      */
     public function get()
     {
-        ShopOrderCart::mQuery(null, function (QueryHelper $query) {
+        PluginShopOrderCart::mQuery(null, function (QueryHelper $query) {
             $query->equal('ghash')->where(['unid' => $this->unid])->with([
                 'goods' => static function (Query $query) {
                     $query->with('items');
@@ -54,17 +54,17 @@ class Cart extends Auth
         // 清理数量0的记录
         $map = ['unid' => $this->unid, 'ghash' => $data['ghash']];
         if ($data['number'] < 1) {
-            ShopOrderCart::mk()->where($map)->delete();
+            PluginShopOrderCart::mk()->where($map)->delete();
             UserAction::recount($this->unid);
             $this->success('移除成功！');
         }
         // 检查商品是否存在
-        $gspec = ShopGoodsItem::mk()->where(['ghash' => $data['ghash']])->findOrEmpty();
-        $goods = ShopGoods::mk()->where(['code' => $gspec->getAttr('gcode')])->findOrEmpty();
+        $gspec = PluginShopGoodsItem::mk()->where(['ghash' => $data['ghash']])->findOrEmpty();
+        $goods = PluginShopGoods::mk()->where(['code' => $gspec->getAttr('gcode')])->findOrEmpty();
         if ($goods->isEmpty() || $gspec->isEmpty()) $this->error('商品不存在！');
         // 保存商品数据
         $data += ['gcode' => $gspec['gcode'], 'gspec' => $gspec['gspec']];
-        if (($cart = ShopOrderCart::mk()->where($map)->findOrEmpty())->save($data)) {
+        if (($cart = PluginShopOrderCart::mk()->where($map)->findOrEmpty())->save($data)) {
             UserAction::recount($this->unid);
             $this->success('保存成功！', $cart->refresh()->toArray());
         } else {

@@ -5,15 +5,15 @@ declare (strict_types=1);
 
 namespace plugin\shop\service;
 
-use plugin\payment\model\PaymentAddress;
-use plugin\payment\model\PaymentRecord;
-use plugin\payment\service\BalanceService;
-use plugin\payment\service\IntegralService;
+use plugin\payment\model\PluginPaymentAddress;
+use plugin\payment\model\PluginPaymentRecord;
+use plugin\payment\service\Balance;
+use plugin\payment\service\Integral;
 use plugin\payment\service\Payment;
 
-use plugin\shop\model\ShopOrder;
-use plugin\shop\model\ShopOrderItem;
-use plugin\shop\model\ShopOrderSend;
+use plugin\shop\model\PluginShopOrder;
+use plugin\shop\model\PluginShopOrderItem;
+use plugin\shop\model\PluginShopOrderSender;
 use think\admin\Exception;
 use think\admin\Library;
 use think\db\exception\DataNotFoundException;
@@ -52,25 +52,25 @@ class UserOrder
     public static function stock(string $orderNo): bool
     {
         $map = ['order_no' => $orderNo];
-        $codes = ShopOrderItem::mk()->where($map)->column('gcode');
+        $codes = PluginShopOrderItem::mk()->where($map)->column('gcode');
         foreach (array_unique($codes) as $code) GoodsService::stock($code);
         return true;
     }
 
     /**
      * 获取订单模型
-     * @param ShopOrder|string $order
+     * @param PluginShopOrder|string $order
      * @param ?integer $unid 动态绑定变量
      * @param ?string $orderNo 动态绑定变量
-     * @return ShopOrder
+     * @return PluginShopOrder
      * @throws Exception
      */
-    public static function widthOrder($order, ?int &$unid = 0, ?string &$orderNo = ''): ShopOrder
+    public static function widthOrder($order, ?int &$unid = 0, ?string &$orderNo = ''): PluginShopOrder
     {
         if (is_string($order)) {
-            $order = ShopOrder::mk()->where(['order_no' => $order])->findOrEmpty();
+            $order = PluginShopOrder::mk()->where(['order_no' => $order])->findOrEmpty();
         }
-        if ($order instanceof ShopOrder) {
+        if ($order instanceof PluginShopOrder) {
             [$unid, $orderNo] = [intval($order->getAttr('unid')), $order->getAttr('order_no')];
             return $order;
         }
@@ -80,12 +80,12 @@ class UserOrder
 
     /**
      * 更新订单收货地址
-     * @param ShopOrder $order
-     * @param PaymentAddress $address
+     * @param PluginShopOrder $order
+     * @param PluginPaymentAddress $address
      * @return boolean
      * @throws Exception
      */
-    public static function perfect(ShopOrder $order, PaymentAddress $address): bool
+    public static function perfect(PluginShopOrder $order, PluginPaymentAddress $address): bool
     {
         $unid = $order->getAttr('unid');
         $orderNo = $order->getAttr('order_no');
@@ -93,9 +93,9 @@ class UserOrder
         $map1 = ['order_no' => $orderNo, 'status' => 1, 'deleted' => 0];
         $map2 = ['order_no' => $order->getAttr('order_no'), 'unid' => $unid];
         [$amount, $tCount, $tCode, $remark] = ExpressService::amount(
-            ShopOrderItem::mk()->where($map1)->column('delivery_code'),
+            PluginShopOrderItem::mk()->where($map1)->column('delivery_code'),
             $address->getAttr('region_prov'), $address->getAttr('region_city'),
-            (int)ShopOrderItem::mk()->where($map2)->sum('delivery_count')
+            (int)PluginShopOrderItem::mk()->where($map2)->sum('delivery_count')
         );
         // 创建订单发货信息
         $extra = [
@@ -116,7 +116,7 @@ class UserOrder
         $extra['region_area'] = $address->getAttr('region_area');
         $extra['region_addr'] = $address->getAttr('region_addr');
         $extra['extra'] = $extra;
-        ShopOrderSend::mk()->where(['order_no' => $orderNo])->findOrEmpty()->save($extra);
+        PluginShopOrderSender::mk()->where(['order_no' => $orderNo])->findOrEmpty()->save($extra);
         // 组装更新订单数据
         $update = ['status' => 2, 'amount_express' => $extra['delivery_amount']];
         $update['amount_real'] = round($order->getAttr('amount_discount') + $amount - $order->getAttr('amount_reduct'), 2);
@@ -126,7 +126,7 @@ class UserOrder
         if ($update['amount_total'] <= 0) $update['amount_total'] = 0.00;
         // 更新用户订单数据
         if ($order->save($update)) {
-            // 触发订单确认事件
+            // TODO 触发订单确认事件
             Library::$sapp->event->trigger('PluginWemallOrderPerfect', $order);
             // 返回处理成功数据
             return true;
@@ -137,13 +137,13 @@ class UserOrder
 
     /**
      * 更新订单支付状态
-     * @param ShopOrder|string $order 订单模型
-     * @param PaymentRecord $payment 支付行为记录
+     * @param PluginShopOrder|string $order 订单模型
+     * @param PluginPaymentRecord $payment 支付行为记录
      * @return bool|string|void|null
      * @throws Exception
      * @remark 订单状态(0已取消,1预订单,2待支付,3待审核,4待发货,5已发货,6已收货,7已评论)
      */
-    public static function change($order, PaymentRecord $payment)
+    public static function change($order, PluginPaymentRecord $payment)
     {
         $order = self::widthOrder($order);
         if ($order->isEmpty()) return null;
@@ -169,6 +169,7 @@ class UserOrder
 
         // 退款或部分退款，仅更新订单支付统计
         if ($payment->getAttr('refund_status')) {
+            // TODO 退回优惠券
             return $order->save();
         }
 
@@ -181,6 +182,7 @@ class UserOrder
         // 凭证支付审核被拒绝，订单回滚到未支付状态
         if ($isVoucher && $payment->getAttr('audit_status') === 0) {
             if ($order->getAttr('status') === 3) $order->save(['status' => 2]);
+            // TODO 更新用户等级
             Library::$sapp->event->trigger('PluginWeMallOrderUpgrade', $order);
         } else {
             $order->save();
@@ -189,7 +191,7 @@ class UserOrder
 
     /**
      * 取消订单撤销奖励
-     * @param ShopOrder|string $order
+     * @param PluginShopOrder|string $order
      * @param boolean $setRebate 更新返佣
      * @return string
      */
@@ -200,12 +202,12 @@ class UserOrder
         } catch (\Exception $exception) {
             trace_file($exception);
         }
-        if ($setRebate) try { /* 订单返佣处理 */
+        if ($setRebate) try { /* TODO 订单返佣处理 */
             Library::$sapp->event->trigger('PluginWeMallOrderUserRebateCancel', $order);
         } catch (\Exception $exception) {
             trace_file($exception);
         }
-        try { /* 升级用户等级 */
+        try { /* TODO 升级用户等级 */
             Library::$sapp->event->trigger('PluginWeMallOrderUserUpgradeUpgrade', intval($order->getAttr('unid')));
         } catch (\Exception $exception) {
             trace_file($exception);
@@ -215,22 +217,22 @@ class UserOrder
 
     /**
      * 支付成功发放奖励
-     * @param ShopOrder $order
+     * @param PluginShopOrder $order
      * @return string
      */
-    public static function payment(ShopOrder $order): string
+    public static function payment(PluginShopOrder $order): string
     {
-        try { /* 创建用户奖励 */
+        try { /* TODO 创建用户奖励 */
             UserReward::create($order, $code);
         } catch (\Exception $exception) {
             trace_file($exception);
         }
-        try { /* 订单返佣处理 */
+        try { /* TODO 订单返佣处理 */
             Library::$sapp->event->trigger('PluginWeMallUserRebateCreate', $order);
         } catch (\Exception $exception) {
             trace_file($exception);
         }
-        try { /* 升级用户等级 */
+        try { /* TODO 升级用户等级 */
             Library::$sapp->event->trigger('PluginWeMallUserRebateUpgrade', $order);
         } catch (\Exception $exception) {
             trace_file($exception);

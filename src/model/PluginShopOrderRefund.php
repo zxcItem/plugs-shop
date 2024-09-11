@@ -9,18 +9,18 @@ use think\model\relation\HasOne;
 
 /**
  * 商品订单售后模型
- * @class ShopOrderRefund
+ * @class PluginShopOrderRefund
  * @package plugin\shop\model
  */
-class ShopOrderRefund extends AbsUser
+class PluginShopOrderRefund extends AbsUser
 {
     /**
      * 获取订单信息
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function orderinfo(): HasOne
     {
-        return $this->hasOne(ShopOrder::class, 'order_no', 'order_no');
+        return $this->hasOne(PluginShopOrder::class, 'order_no', 'order_no');
     }
 
     /**

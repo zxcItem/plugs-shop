@@ -1,21 +1,15 @@
 {
     "type": "think-admin-plugin",
     "name": "xiaochao/plugs-shop",
-    "license": "MIT",
-    "description": "PlugsShop for ThinkAdmin",
+    "version": "dev-master",
     "authors": [
         {
             "name": "叶落无痕",
-            "email": "1262847141@qq.com"
+            "email": "zxcaile@foxmail.com"
         }
     ],
     "require": {
         "php": ">7.1",
-        "ext-gd": "*",
-        "ext-curl": "*",
-        "ext-json": "*",
-        "zoujingli/think-install": "^1.0|@dev",
-        "zoujingli/think-library": "^6.1|@dev",
         "xiaochao/plugs-account": "dev-master",
         "xiaochao/plugs-payment": "dev-master"
     },
@@ -26,8 +20,10 @@
     },
     "extra": {
         "config": {
-            "type": "plugin",
-            "name": "通用商城系统"
+            "type": "module",
+            "name": "通用商城系统",
+            "cover": "iconfont iconfont-shoplight",
+            "description": "通用商城系统为普通商城基础功能,商品发布，订单发货,售后等"
         },
         "think": {
             "services": [

@@ -4,7 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop\goods;
 
-use plugin\shop\model\ShopGoodsCate;
+use plugin\shop\model\PluginShopGoodsCate;
 use think\admin\Controller;
 use think\admin\extend\DataExtend;
 use think\admin\helper\QueryHelper;
@@ -34,7 +34,7 @@ class Cate extends Controller
      */
     public function index()
     {
-        ShopGoodsCate::mQuery($this->get)->layTable(function () {
+        PluginShopGoodsCate::mQuery($this->get)->layTable(function () {
             $this->title = "商品分类管理";
         }, static function (QueryHelper $query) {
             $query->where(['deleted' => 0]);
@@ -57,7 +57,7 @@ class Cate extends Controller
      */
     public function add()
     {
-        ShopGoodsCate::mForm('form');
+        PluginShopGoodsCate::mForm('form');
     }
 
     /**
@@ -66,7 +66,7 @@ class Cate extends Controller
      */
     public function edit()
     {
-        ShopGoodsCate::mForm('form');
+        PluginShopGoodsCate::mForm('form');
     }
 
     /**
@@ -80,7 +80,7 @@ class Cate extends Controller
     {
         if ($this->request->isGet()) {
             $data['pid'] = intval($data['pid'] ?? input('pid', '0'));
-            $this->cates = ShopGoodsCate::pdata($this->maxLevel, $data, [
+            $this->cates = PluginShopGoodsCate::pdata($this->maxLevel, $data, [
                 'id' => '0', 'pid' => '-1', 'name' => '顶部分类',
             ]);
         }
@@ -92,7 +92,7 @@ class Cate extends Controller
      */
     public function state()
     {
-        ShopGoodsCate::mSave($this->_vali([
+        PluginShopGoodsCate::mSave($this->_vali([
             'status.in:0,1'  => '状态值范围异常！',
             'status.require' => '状态值不能为空！',
         ]));
@@ -104,7 +104,7 @@ class Cate extends Controller
      */
     public function remove()
     {
-        ShopGoodsCate::mDelete();
+        PluginShopGoodsCate::mDelete();
     }
 
     /**

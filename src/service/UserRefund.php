@@ -5,7 +5,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\service;
 
-use plugin\shop\model\ShopOrderRefund;
+use plugin\shop\model\PluginShopOrderRefund;
 use think\admin\Exception;
 
 /**
@@ -48,12 +48,12 @@ abstract class UserRefund
      * 动态获取售后模型
      * @param array $map
      * @param callable $fn
-     * @return ShopOrderRefund
-     * @throws Exception
+     * @return \plugin\shop\model\PluginShopOrderRefund
+     * @throws \think\admin\Exception
      */
-    public static function withRefund(array $map, callable $fn): ShopOrderRefund
+    public static function withRefund(array $map, callable $fn): PluginShopOrderRefund
     {
-        $refund = ShopOrderRefund::mk()->where($map)->findOrEmpty();
+        $refund = PluginShopOrderRefund::mk()->where($map)->findOrEmpty();
         if ($refund->isEmpty()) throw new Exception('无效售后单！');
         if (is_callable($fn) && is_array($result = $fn($refund))) {
             if (isset($result['status']) !== $refund->getAttr('status')) {

@@ -4,7 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\service;
 
-use plugin\shop\model\ShopExpressTemplate;
+use plugin\shop\model\PluginShopExpressTemplate;
 use think\admin\Exception;
 use think\admin\service\InterfaceService;
 
@@ -13,7 +13,7 @@ use think\admin\service\InterfaceService;
  * @class ExpressService
  * @package plugin\shop\service
  */
-class ExpressService
+abstract class ExpressService
 {
     /**
      * 模拟计算快递费用
@@ -22,7 +22,7 @@ class ExpressService
      * @param string $cityName 城市名称
      * @param integer $deliveryCount 邮费基数
      * @return array [邮费金额, 计费基数, 模板编号, 计费描述]
-     * @throws Exception
+     * @throws \think\admin\Exception
      */
     public static function amount(array $codes, string $provName, string $cityName, int $deliveryCount = 0): array
     {
@@ -30,7 +30,7 @@ class ExpressService
         if (in_array('FREE', $codes)) return [0, $deliveryCount, '', '免费包邮'];
         if (empty($codes)) throw new Exception('邮费模板为空');
         $where = [['status', '=', 1], ['deleted', '=', 0], ['code', 'in', $codes]];
-        $template = ShopExpressTemplate::mk()->where($where)->order('sort desc,id desc')->findOrEmpty();
+        $template = PluginShopExpressTemplate::mk()->where($where)->order('sort desc,id desc')->findOrEmpty();
         if ($template->isEmpty()) throw new Exception('邮费模板无效');
         $config = $template['normal'] ?? [];
         foreach ($template['content'] ?? [] as $item) {
@@ -47,7 +47,7 @@ class ExpressService
             return [$firstAmount, $deliveryCount, $template['code'], "首件计费，不超过{$firstCount}件"];
         } else {
             $amount = $repeatCount > 0 ? $repeatAmount * ceil(($deliveryCount - $firstCount) / $repeatCount) : 0;
-            return [$firstAmount + $amount, $deliveryCount, $template['code'], "续件计费，超出{$firstCount}件续件{$amount}元"];
+            return [round($firstAmount + $amount, 2), $deliveryCount, $template['code'], "续件计费，超出{$firstCount}件续件{$amount}元"];
         }
     }
 
@@ -56,11 +56,11 @@ class ExpressService
      * @param integer $level 最大等级
      * @param ?integer $status 状态筛选
      * @return array
-     * @throws Exception
+     * @throws \think\admin\Exception
      */
     public static function region(int $level = 3, ?int $status = null): array
     {
-        [$items, $ncodes] = [[], sysdata('plugin.shop.region.not')];
+        [$items, $ncodes] = [[], sysdata('plugin.wemall.region.not')];
         foreach (json_decode(file_get_contents(syspath('public/static/plugs/jquery/area/data.json')), true) as $prov) {
             $pstat = intval(!in_array($prov['code'], $ncodes));
             if (is_null($status) || is_numeric($status) && $status === $pstat) {
@@ -89,7 +89,7 @@ class ExpressService
      * @param string $express 快递公司编号
      * @param string $number 快递配送单号
      * @return array
-     * @throws Exception
+     * @throws \think\admin\Exception
      */
     public static function query(string $express, string $number): array
     {
@@ -101,7 +101,7 @@ class ExpressService
     /**
      * 楚才开放平台快递公司
      * @return array
-     * @throws Exception
+     * @throws \think\admin\Exception
      */
     public static function company(): array
     {

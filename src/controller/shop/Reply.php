@@ -5,9 +5,9 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop;
 
-use plugin\account\model\AccountUser;
-use plugin\shop\model\ShopActionComment;
-use plugin\shop\model\ShopGoods;
+use plugin\account\model\PluginAccountUser;
+use plugin\shop\model\PluginShopUserActionComment;
+use plugin\shop\model\PluginShopGoods;
 use think\admin\Controller;
 use think\admin\helper\QueryHelper;
 
@@ -30,14 +30,14 @@ class Reply extends Controller
     public function index()
     {
         $this->type = $this->request->get('type', 'index');
-        ShopActionComment::mQuery()->layTable(function () {
+        PluginShopUserActionComment::mQuery()->layTable(function () {
             $this->title = '商品评论管理';
         }, function (QueryHelper $query) {
             // 用户查询
-            $db = AccountUser::mQuery()->like('phone|nickname#user_keys')->db();
+            $db = PluginAccountUser::mQuery()->like('phone|nickname#user_keys')->db();
             if ($db->getOptions('where')) $query->whereRaw("unid in {$db->field('id')->buildSql()}");
             // 商品查询
-            $db = ShopGoods::mQuery()->like('code|name#goods_keys')->db();
+            $db = PluginShopGoods::mQuery()->like('code|name#goods_keys')->db();
             if ($db->getOptions('where')) $query->whereRaw("gcode in {$db->field('code')->buildSql()}");
             // 数据过滤
             $query->like('order_no')->where(['status' => intval($this->type === 'index'), 'deleted' => 0]);
@@ -52,7 +52,7 @@ class Reply extends Controller
      */
     public function edit()
     {
-        ShopActionComment::mQuery()->with(['user', 'goods', 'orderinfo'])->mForm('form');
+        PluginShopUserActionComment::mQuery()->with(['user', 'goods', 'orderinfo'])->mForm('form');
     }
 
     /**
@@ -61,7 +61,7 @@ class Reply extends Controller
      */
     public function state()
     {
-        ShopActionComment::mSave($this->_vali([
+        PluginShopUserActionComment::mSave($this->_vali([
             'status.in:0,1'  => '状态值范围异常！',
             'status.require' => '状态值不能为空！',
         ]));

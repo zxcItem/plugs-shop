@@ -4,8 +4,8 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\base\express;
 
-use plugin\shop\model\ShopExpressCompany;
-use plugin\shop\model\ShopExpressTemplate;
+use plugin\shop\model\PluginShopExpressCompany;
+use plugin\shop\model\PluginShopExpressTemplate;
 use plugin\shop\service\ExpressService;
 use think\admin\Controller;
 use think\admin\Exception;
@@ -33,7 +33,7 @@ class Template extends Controller
     public function index()
     {
         $this->type = $this->get['type'] ?? 'index';;
-        ShopExpressTemplate::mQuery()->layTable(function () {
+        PluginShopExpressTemplate::mQuery()->layTable(function () {
             $this->title = '快递邮费模板';
         }, function (QueryHelper $query) {
             $query->like('code,name')->equal('status')->dateBetween('create_time');
@@ -67,7 +67,7 @@ class Template extends Controller
     public function add()
     {
         $this->title = '添加邮费模板';
-        ShopExpressTemplate::mForm('form');
+        PluginShopExpressTemplate::mForm('form');
     }
 
     /**
@@ -77,7 +77,7 @@ class Template extends Controller
     public function edit()
     {
         $this->title = '编辑邮费模板';
-        ShopExpressTemplate::mForm('form');
+        PluginShopExpressTemplate::mForm('form');
     }
 
     /**
@@ -92,7 +92,7 @@ class Template extends Controller
         }
         if ($this->request->isGet()) {
             $this->citys = ExpressService::region(2, 1);
-            $this->companys = ShopExpressCompany::items();
+            $this->companys = PluginShopExpressCompany::items();
         } else {
             $data['company'] = arr2str($data['company'] ?? []);
         }
@@ -115,7 +115,7 @@ class Template extends Controller
      */
     public function state()
     {
-        ShopExpressTemplate::mSave($this->_vali([
+        PluginShopExpressTemplate::mSave($this->_vali([
             'status.in:0,1'  => '状态值范围异常！',
             'status.require' => '状态值不能为空！',
         ]));
@@ -127,6 +127,6 @@ class Template extends Controller
      */
     public function remove()
     {
-        ShopExpressTemplate::mDelete();
+        PluginShopExpressTemplate::mDelete();
     }
 }

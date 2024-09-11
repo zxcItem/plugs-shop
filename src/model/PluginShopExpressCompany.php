@@ -1,13 +1,18 @@
 <?php
 
+
+declare (strict_types=1);
+
 namespace plugin\shop\model;
 
 use plugin\account\model\Abs;
 
 /**
- * 快递公司模型
+ * 商城快递公司数据
+ * @class PluginShopExpressCompany
+ * @package plugin\shop\model
  */
-class ShopExpressCompany extends Abs
+class PluginShopExpressCompany extends Abs
 {
     /**
      * 获取快递公司数据

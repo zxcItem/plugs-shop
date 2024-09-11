@@ -4,12 +4,12 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\api;
 
-use plugin\shop\model\ShopActionComment;
-use plugin\shop\model\ShopExpressCompany;
-use plugin\shop\model\ShopGoods;
-use plugin\shop\model\ShopGoodsCate;
-use plugin\shop\model\ShopGoodsMark;
-use plugin\shop\model\ShopActionSearch;
+use plugin\shop\model\PluginShopUserActionComment;
+use plugin\shop\model\PluginShopExpressCompany;
+use plugin\shop\model\PluginShopGoods;
+use plugin\shop\model\PluginShopGoodsCate;
+use plugin\shop\model\PluginShopGoodsMark;
+use plugin\shop\model\PluginShopUserActionSearch;
 use plugin\shop\service\ExpressService;
 use think\admin\Controller;
 use think\admin\Exception;
@@ -17,6 +17,7 @@ use think\admin\helper\QueryHelper;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\DbException;
 use think\db\exception\ModelNotFoundException;
+use think\db\Query;
 
 /**
  * 获取商品数据接口
@@ -27,59 +28,100 @@ class Goods extends Controller
 {
 
     /**
-     * 获取商品列表
-     * @return void
-     */
-    public function index()
-    {
-        ShopGoods::mQuery(null, function (QueryHelper $query) {
-            $query->equal('code')->like('name')->like('marks,cates', ',');
-            if (!empty($code = input('code'))) {
-                $query->with('items');
-                ShopGoods::mk()->where(['code' => $code])->inc('num_read')->update([]);
-            } else {
-                $query->field('code,name,marks,cates,cover,remark,price_selling,price_market,stock_virtual');
-            }
-            $sort = intval(input('sort', 0));
-            if ($sort === 1) {
-                $query->order('num_read desc,sort desc,id desc');
-            } elseif ($sort === 2) {
-                $query->order('price_selling desc,sort desc,id desc');
-            } else {
-                $query->order('sort desc,id desc');
-            }
-            $query->where(['status' => 1, 'deleted' => 0]);
-            $this->success('获取商品数据', $query->page(intval(input('page', 1)), false, false, 10));
-        });
-    }
-
-    /**
-     * 获取商品详情
+     * 获取商品列表或详情
      * @return void
      */
     public function get()
     {
-        ShopGoods::mQuery(null, function (QueryHelper $query) {
-            $code = input('code');
-            $query->equal('code')->with('items');
-            ShopGoods::mk()->where(['code' => $code])->inc('num_read')->update([]);
+        $this->coupon = null;
+        $this->cnames = null;
+        PluginShopGoods::mQuery(null, function (QueryHelper $query) {
+            // 根据优惠券展示商品
+            if ($couponCode = input('coupon')) {
+                $where = ['code' => $couponCode, 'deleted' => 0];
+//                $userCoupon = PluginShopUserCoupon::mk()->where($where)->findOrEmpty();
+//                if ($userCoupon->isEmpty()) $this->error('无效优惠券！');
+                // 追加卡券信息到商品信息
+//                $map = ['status' => 1, 'deleted' => 0];
+//                $this->coupon = $userCoupon->coupon()->where($map)->field('type,name,extra,amount,limit_amount,limit_times')->findOrEmpty()->toArray();
+//                if (empty($this->coupon)) $this->error('优惠券已停用！');
+                if ($this->coupon['type'] == 1) {
+                    $gcodes = array_column($this->coupon['extra'], 'code');
+                    count($gcodes) > 0 ? $query->whereIn('code', $gcodes) : $query->whereRaw('1<>0');
+                }
+                unset($this->coupon['extra']);
+            }
+            // 根据多标签内容过滤
+            if (!empty($vMarks = input('vmarks'))) {
+                $query->where('marks', 'like', array_map(function ($mark) {
+                    return "%,{$mark},%";
+                }, str2arr($vMarks)), 'OR');
+            }
+            // 显示分类显示
+            if (!empty($vCates = input('cates'))) {
+                $cates = array_filter(PluginShopGoodsCate::items(), function ($v) use ($vCates) {
+                    return $v['id'] == $vCates;
+                });
+                $this->cnames = null;
+                if (count($cates) > 0) {
+                    $cate = array_pop($cates);
+                    $this->cnames = array_combine($cate['ids'], $cate['names']);
+                }
+            }
+            $query->equal('code')->like('name#keys')->like('marks,cates', ',');
+            if (!empty($code = input('code'))) {
+                // 查询单个商品详情
+                $query->with(['discount', 'items', 'comments' => function (Query $query) {
+                    $query->limit(2)->where(['status' => 1, 'deleted' => 0]);
+                }])->withCount(['comments' => function (Query $query) {
+                    $query->where(['status' => 1, 'deleted' => 0]);
+                }]);
+                PluginShopGoods::mk()->where(['code' => $code])->inc('num_read')->update([]);
+            } else {
+                $query->with('discount')->withoutField('content');
+            }
+            // 数据排序处理
+            $sort = intval(input('sort', 0));
+            $type = intval(input('order', 0)) ? 'asc' : 'desc';
+            if ($sort === 1) {
+                $query->order("num_read {$type},sort {$type},id {$type}");
+            } elseif ($sort === 2) {
+                $query->order("price_selling {$type},sort {$type},id {$type}");
+            } else {
+                $query->order("sort {$type},id {$type}");
+            }
             $query->where(['status' => 1, 'deleted' => 0]);
-            $this->success('获取商品数据', $query->findOrEmpty());
+            // 查询数据分页
+            $page = intval(input('page', 1));
+            $limit = max(min(intval(input('limit', 20)), 60), 1);
+            $this->success('获取商品数据', $query->page($page, false, false, $limit));
         });
+    }
+
+    /**
+     * 数据结果处理
+     * @param array $data
+     * @param array $result
+     * @return void
+     */
+    protected function _get_page_filter(array &$data, array &$result)
+    {
+        $result['cnames'] = $this->cnames ?? null;
+        $result['coupon'] = $this->coupon ?? null;
     }
 
     /**
      * 获取商品分类及标签
      * @return void
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function cate()
     {
         $this->success('获取分类成功', [
-            'mark' => ShopGoodsMark::items(),
-            'cate' => ShopGoodsCate::treeData(),
+            'mark' => PluginShopGoodsMark::items(),
+            'cate' => PluginShopGoodsCate::dtree(),
         ]);
     }
 
@@ -89,7 +131,7 @@ class Goods extends Controller
      */
     public function comments()
     {
-        ShopActionComment::mQuery(null, function (QueryHelper $query) {
+        PluginShopUserActionComment::mQuery(null, function (QueryHelper $query) {
             $query->with(['bindUser'])->equal('gcode')->order('id desc');
             $this->success('获取评论成功！', $query->page(intval(input('page', 1)), false, false, 30));
         });
@@ -110,11 +152,25 @@ class Goods extends Controller
     /**
      * 获取物流配送区域
      * @return void
-     * @throws Exception
+     * @throws \think\admin\Exception
      */
     public function region()
     {
         $this->success('获取配送区域', ExpressService::region(3, 1));
+    }
+
+    /**
+     * 获取快递公司数据
+     * @return void
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function express()
+    {
+        $query = PluginShopExpressCompany::mk()->where(['status' => 1, 'deleted' => 0]);
+        $query->field(['name' => 'text', 'code' => 'value'])->order('sort desc,id desc');
+        $this->success('获取快递公司', $query->select()->toArray());
     }
 
     /**
@@ -123,24 +179,10 @@ class Goods extends Controller
      */
     public function hotkeys()
     {
-        ShopActionSearch::mQuery(null, function (QueryHelper $query) {
+        PluginShopUserActionSearch::mQuery(null, function (QueryHelper $query) {
             $query->whereTime('sort', '-30 days')->like('keys');
             $query->field('keys')->group('keys')->cache(true, 60)->order('sort desc');
             $this->success('获取搜索热词！', ['keys' => $query->limit(0, 15)->column('keys')]);
         });
-    }
-
-    /**
-     * 获取快递公司数据
-     * @return void
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
-     */
-    public function express()
-    {
-        $query = ShopExpressCompany::mk()->where(['status' => 1, 'deleted' => 0]);
-        $query->field(['name' => 'text', 'code' => 'value'])->order('sort desc,id desc');
-        $this->success('获取快递公司', $query->select()->toArray());
     }
 }

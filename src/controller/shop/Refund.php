@@ -4,9 +4,9 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop;
 
-use plugin\payment\model\PaymentRecord;
+use plugin\payment\model\PluginPaymentRecord;
 use plugin\payment\service\Payment;
-use plugin\shop\model\ShopOrderRefund;
+use plugin\shop\model\PluginShopOrderRefund;
 use plugin\shop\service\UserOrder;
 use plugin\shop\service\UserRefund;
 use think\admin\Controller;
@@ -38,11 +38,11 @@ class Refund extends Controller
     public function index()
     {
         $this->type = trim($this->get['type'] ?? 'ta', 't');
-        ShopOrderRefund::mQuery()->layTable(function (QueryHelper $query) {
+        PluginShopOrderRefund::mQuery()->layTable(function (QueryHelper $query) {
             $this->title = '售后订单管理';
             $this->total = ['t0' => 0, 't1' => 0, 't2' => 0, 't3' => 0, 't4' => 0, 't5' => 0, 't6' => 0, 't7' => 0, 'ta' => 0];
             $this->types = ['ta' => '全部订单', 't2' => '待审核', 't3' => '待退货', 't4' => '已退货', 't5' => '退款中', 't6' => '已退款', 't7' => '已完成', 't0' => '已取消'];
-            $this->states = UserRefund::states;
+            $this->states = UserRefund::states1;
             foreach ($query->db()->field('status,count(1) total')->group('status')->cursor() as $vo) {
                 [$this->total["t{$vo['status']}"] = $vo['total'], $this->total['ta'] += $vo['total']];
             }
@@ -64,7 +64,7 @@ class Refund extends Controller
     public function edit()
     {
         $this->title = '修改售后单';
-        ShopOrderRefund::mQuery(null, function (QueryHelper $query) {
+        PluginShopOrderRefund::mQuery(null, function (QueryHelper $query) {
             $query->with([
                 'user', 'orderinfo' => function (Query $query) {
                     $query->with(['items', 'payments' => function (Query $query) {
@@ -85,7 +85,7 @@ class Refund extends Controller
         if ($this->request->isGet()) {
             if (empty($data)) $this->error('无效售后单！');
         } else try {
-            $refund = ShopOrderRefund::mk()->findOrEmpty($data['id'] ?? 0);
+            $refund = PluginShopOrderRefund::mk()->findOrEmpty($data['id'] ?? 0);
             if ($refund->isEmpty()) $this->error('无效的售后单！');
             $order = UserOrder::widthOrder($refund->getAttr('order_no'));
             if ($order->isEmpty()) $this->error('订单数据异常！');
@@ -104,9 +104,9 @@ class Refund extends Controller
                             $data['balance_amount'] = $amount;
                         } elseif ($type === Payment::COUPON) {
                             $map = ['code' => $pcode, 'channel_type' => Payment::COUPON];
-                            $coupon = PaymentRecord::mk()->where($map)->findOrEmpty()->toArray();
+                            $coupon = PluginPaymentRecord::mk()->where($map)->findOrEmpty()->toArray();
                             // TODO 优惠券处理
-                            empty($coupon) || UserCoupon::resume($coupon['payment_trade']);
+//                            empty($coupon) || UserCoupon::resume($coupon['payment_trade']);
                             $amount = floatval($coupon['payment_amount']);
                         } else {
                             $rcode = $refund->getAttr('payment_code') ?: Payment::withRefundCode();

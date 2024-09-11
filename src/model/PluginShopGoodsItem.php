@@ -1,26 +1,32 @@
 <?php
 
+declare (strict_types=1);
+
 namespace plugin\shop\model;
 
+use plugin\account\model\Abs;
 use think\model\relation\HasOne;
 
 /**
- * 商城商品规格模型
+ * 商城商品规格数据
+ * @class PluginShopGoodsItem
+ * @package plugin\shop\model
  */
-class ShopGoodsItem extends AbsUser
+class PluginShopGoodsItem extends Abs
 {
+
     /**
      * 关联商品信息
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function goods(): HasOne
     {
-        return $this->hasOne(ShopGoods::class, 'code', 'gcode');
+        return $this->hasOne(PluginShopGoods::class, 'code', 'gcode');
     }
 
     /**
      * 绑定商品信息
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function bindGoods(): HasOne
     {

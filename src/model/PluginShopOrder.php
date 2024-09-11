@@ -1,72 +1,75 @@
 <?php
 
+declare (strict_types=1);
+
 namespace plugin\shop\model;
 
-use plugin\account\model\AccountUser;
-use plugin\payment\model\PaymentRecord;
+use plugin\account\model\PluginAccountUser;
+use plugin\payment\model\PluginPaymentRecord;
 use think\model\relation\HasMany;
 use think\model\relation\HasOne;
 
 /**
- * 商城订单模型
+ * 商城订单主模型
+ * @class PluginShopOrder
+ * @package plugin\shop\model
  */
-class ShopOrder extends AbsUser
+class PluginShopOrder extends AbsUser
 {
-
     /**
      * 关联推荐用户
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function from(): HasOne
     {
-        return $this->hasOne(AccountUser::class, 'id', 'puid1');
+        return $this->hasOne(PluginAccountUser::class, 'id', 'puid1');
     }
 
     /**
      * 关联商品数据
-     * @return HasMany
+     * @return \think\model\relation\HasMany
      */
     public function items(): HasMany
     {
-        return $this->hasMany(ShopOrderItem::class, 'order_no', 'order_no');
+        return $this->hasMany(PluginShopOrderItem::class, 'order_no', 'order_no');
     }
 
     /**
      * 关联支付数据
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function payment(): HasOne
     {
-        return $this->hasOne(PaymentRecord::class, 'order_no', 'order_no')->where([
+        return $this->hasOne(PluginPaymentRecord::class, 'order_no', 'order_no')->where([
             'payment_status' => 1,
         ]);
     }
 
     /**
      * 关联支付记录
-     * @return HasMany
+     * @return \think\model\relation\HasMany
      */
     public function payments(): HasMany
     {
-        return $this->hasMany(PaymentRecord::class, 'order_no', 'order_no')->order('id desc')->withoutField('payment_notify');
+        return $this->hasMany(PluginPaymentRecord::class, 'order_no', 'order_no')->order('id desc')->withoutField('payment_notify');
     }
 
     /**
      * 关联收货地址
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function address(): HasOne
     {
-        return $this->hasOne(ShopOrderSend::class, 'order_no', 'order_no');
+        return $this->hasOne(PluginShopOrderSender::class, 'order_no', 'order_no');
     }
 
     /**
      * 关联发货信息
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function sender(): HasOne
     {
-        return $this->hasOne(ShopOrderSend::class, 'order_no', 'order_no');
+        return $this->hasOne(PluginShopOrderSender::class, 'order_no', 'order_no');
     }
 
     /**
@@ -98,5 +101,15 @@ class ShopOrder extends AbsUser
     public function setPaymentTimeAttr($value): string
     {
         return $this->setCreateTimeAttr($value);
+    }
+
+    public function setConfirmTimeAttr($value): string
+    {
+        return $this->setCreateTimeAttr($value);
+    }
+
+    public function getConfirmTimeAttr($value): string
+    {
+        return $this->getCreateTimeAttr($value);
     }
 }

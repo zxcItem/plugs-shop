@@ -1,13 +1,17 @@
 <?php
 
+declare (strict_types=1);
+
 namespace plugin\shop\model;
 
 use plugin\account\model\Abs;
 
 /**
- * 商城商品标签模型
+ * 商城商品标签数据
+ * @class PluginShopGoodsMark
+ * @package plugin\shop\model
  */
-class ShopGoodsMark extends Abs
+class PluginShopGoodsMark extends Abs
 {
     /**
      * 获取所有标签
@@ -16,15 +20,5 @@ class ShopGoodsMark extends Abs
     public static function items(): array
     {
         return static::mk()->where(['status' => 1])->order('sort desc,id desc')->column('name');
-    }
-
-    /**
-     * 格式化创建时间
-     * @param string $value
-     * @return string
-     */
-    public function getCreateAtAttr(string $value): string
-    {
-        return format_datetime($value);
     }
 }

@@ -5,7 +5,7 @@ declare (strict_types=1);
 namespace plugin\shop\model;
 
 use plugin\account\model\Abs;
-use plugin\account\model\AccountUser;
+use plugin\account\model\PluginAccountUser;
 use think\model\relation\HasOne;
 
 /**
@@ -17,11 +17,11 @@ abstract class AbsUser extends Abs
 {
     /**
      * 关联当前用户
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function user(): HasOne
     {
-        return $this->hasOne(AccountUser::class, 'id', 'unid');
+        return $this->hasOne(PluginAccountUser::class, 'id', 'unid');
     }
 
     /**

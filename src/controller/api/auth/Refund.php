@@ -5,9 +5,9 @@ declare (strict_types=1);
 namespace plugin\shop\controller\api\auth;
 
 use plugin\shop\controller\api\Auth;
-use plugin\shop\model\ShopExpressCompany;
-use plugin\shop\model\ShopOrder;
-use plugin\shop\model\ShopOrderRefund;
+use plugin\shop\model\PluginShopExpressCompany;
+use plugin\shop\model\PluginShopOrder;
+use plugin\shop\model\PluginShopOrderRefund;
 use plugin\shop\service\UserRefund;
 use think\admin\Exception;
 use think\admin\extend\CodeExtend;
@@ -29,7 +29,7 @@ class Refund extends Auth
      */
     public function get()
     {
-        ShopOrderRefund::mQuery(null, function (QueryHelper $query) {
+        PluginShopOrderRefund::mQuery(null, function (QueryHelper $query) {
             $query->equal('code')->in('status')->with([
                 'orderinfo' => function (Query $query) {
                     $query->with(['items', 'payments' => function (Query $query) {
@@ -63,12 +63,12 @@ class Refund extends Auth
         ]);
         // 处理订单数据
         $map = ['order_no' => $data['order_no'], 'unid' => $this->unid];
-        $order = ShopOrder::mk()->where($map)->findOrEmpty();
+        $order = PluginShopOrder::mk()->where($map)->findOrEmpty();
         if ($order->isEmpty()) $this->error('无效订单数据！');
         if ($order->getAttr('refund_status') > 0) $this->error('已发起售后！');
         // 是否已有售后
         $map = ['order_no' => $data['order_no'], 'status' => [1, 2, 3, 4, 5]];
-        $refund = ShopOrderRefund::mk()->where($map)->findOrEmpty();
+        $refund = PluginShopOrderRefund::mk()->where($map)->findOrEmpty();
         if ($refund->isExists()) $this->error('已存在售后单！');
         // 上传图片转存
         if (!empty($data['images'])) {
@@ -82,7 +82,7 @@ class Refund extends Auth
         $data['code'] = CodeExtend::uniqidNumber(16, 'R');
         $data['status'] = 2;
         $data['number'] = $order->getAttr('number_goods');
-        if (($refund = ShopOrderRefund::mk())->save($data)) {
+        if (($refund = PluginShopOrderRefund::mk())->save($data)) {
             $order->save(['refund_status' => $data['status'], 'refund_code' => $data['code']]);
             $this->success('提交成功！', $refund->toArray());
         } else {
@@ -102,10 +102,10 @@ class Refund extends Auth
         ]);
         // 快递公司名称
         $map = ['code' => $data['express_code']];
-        $data['express_name'] = ShopExpressCompany::mk()->where($map)->value('name');
+        $data['express_name'] = PluginShopExpressCompany::mk()->where($map)->value('name');
         if (empty($data['express_name'])) $this->error('无效快递公司！');
         // 更新售后内容
-        self::saveRefund(function (ShopOrderRefund $refund) use ($data) {
+        self::saveRefund(function (PluginShopOrderRefund $refund) use ($data) {
             // 流程状态(0已取消,1预订单,2待审核,3待退货,4已退货,5待退款,6已退货,7已完成)
             if ($refund->getAttr('status') < 4) $data['status'] = 4;
             return $data;

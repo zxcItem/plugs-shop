@@ -1,17 +1,18 @@
 <?php
 
+declare (strict_types=1);
+
 namespace plugin\shop\model;
 
 use plugin\account\model\Abs;
 use think\admin\extend\DataExtend;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 
 /**
- * 商品分类模型
+ * 商城商品分类数据
+ * @class PluginShopGoodsCate
+ * @package plugin\shop\model
  */
-class ShopGoodsCate extends Abs
+class PluginShopGoodsCate extends Abs
 {
     /**
      * 获取上级可用选项
@@ -19,9 +20,9 @@ class ShopGoodsCate extends Abs
      * @param array $data 表单数据
      * @param array $parent 上级分类
      * @return array
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public static function pdata(int $max, array &$data, array $parent = []): array
     {
@@ -38,11 +39,11 @@ class ShopGoodsCate extends Abs
     /**
      * 获取数据树
      * @return array
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
-    public static function treeData(): array
+    public static function dtree(): array
     {
         $query = static::mk()->where(['status' => 1, 'deleted' => 0])->order('sort desc,id desc');
         return DataExtend::arr2tree($query->withoutField('sort,status,deleted,create_time')->select()->toArray());

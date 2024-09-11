@@ -4,10 +4,10 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop;
 
-use plugin\account\model\AccountUser;
+use plugin\account\model\PluginAccountUser;
 use plugin\payment\service\Payment;
-use plugin\shop\model\ShopOrder;
-use plugin\shop\model\ShopOrderSend;
+use plugin\shop\model\PluginShopOrder;
+use plugin\shop\model\PluginShopOrderSender;
 use plugin\shop\service\UserOrder;
 use plugin\shop\service\UserRefund;
 use think\admin\Controller;
@@ -51,7 +51,7 @@ class Order extends Controller
     public function index()
     {
         $this->type = trim($this->get['type'] ?? 'ta', 't');
-        ShopOrder::mQuery()->layTable(function (QueryHelper $query) {
+        PluginShopOrder::mQuery()->layTable(function (QueryHelper $query) {
             $this->title = '订单数据管理';
             $this->total = ['t0' => 0, 't1' => 0, 't2' => 0, 't3' => 0, 't4' => 0, 't5' => 0, 't6' => 0, 't7' => 0, 'ta' => 0];
             $this->types = ['ta' => '全部订单', 't2' => '待支付', 't3' => '待审核', 't4' => '待发货', 't5' => '已发货', 't6' => '已收货', 't7' => '已评论', 't0' => '已取消'];
@@ -64,11 +64,11 @@ class Order extends Controller
             $query->equal('status,refund_status')->like('order_no');
             $query->dateBetween('create_time,payment_time,cancel_time,delivery_type');
             // 发货信息搜索
-            $db = ShopOrderSend::mQuery()->dateBetween('express_time')
+            $db = PluginShopOrderSender::mQuery()->dateBetween('express_time')
                 ->like('user_name|user_phone|region_prov|region_city|region_area|region_addr#address')->db();
             if ($db->getOptions('where')) $query->whereRaw("order_no in {$db->field('order_no')->buildSql()}");
             // 用户搜索查询
-            $db = AccountUser::mQuery()->like('phone|nickname#user_keys')->db();
+            $db = PluginAccountUser::mQuery()->like('phone|nickname#user_keys')->db();
             if ($db->getOptions('where')) $query->whereRaw("unid in {$db->field('id')->buildSql()}");
             // 列表选项卡
             if (is_numeric($this->type)) {
@@ -89,7 +89,7 @@ class Order extends Controller
     public function audit()
     {
         if ($this->request->isGet()) {
-            ShopOrder::mForm('', 'order_no');
+            PluginShopOrder::mForm('', 'order_no');
         } else {
             $data = $this->_vali([
                 'order_no.require' => '订单单号不能为空！',
@@ -109,13 +109,13 @@ class Order extends Controller
                 $data['payment_status'] = 1;
                 $data['payment_remark'] = $data['remark'] ?: '后台审核支付凭证通过';
             }
-            $order = ShopOrder::mk()->where(['order_no' => $data['order_no']])->findOrEmpty();
+            $order = PluginShopOrder::mk()->where(['order_no' => $data['order_no']])->findOrEmpty();
             if ($order->isEmpty() || $order['status'] !== 3) $this->error('不允许操作审核！');
             // 无需发货时的处理
             if ($data['status'] === 4 && empty($order['delivery_type'])) $data['status'] = 6;
             // 更新订单支付状态
             $map = ['status' => 3, 'order_no' => $data['order_no']];
-            if (ShopOrder::mk()->strict(false)->where($map)->update($data) !== false) {
+            if (PluginShopOrder::mk()->strict(false)->where($map)->update($data) !== false) {
                 if (in_array($data['status'], [4, 5, 6])) {
                     // TODO 待完善单据凭证支付审核成功逻辑
                     $this->app->event->trigger('PluginPaymentSuccess', $data);
@@ -150,7 +150,7 @@ class Order extends Controller
     public function cancel()
     {
         $data = $this->_vali(['order_no.require' => '订单号不能为空！']);
-        $order = ShopOrder::mk()->where($data)->findOrEmpty();
+        $order = PluginShopOrder::mk()->where($data)->findOrEmpty();
         if ($order->isEmpty()) $this->error('订单查询异常！');
         try {
             if (!in_array($order['status'], [1, 2, 3])) {
@@ -164,6 +164,7 @@ class Order extends Controller
             ]);
             if ($result !== false) {
                 UserOrder::stock($order['order_no']);
+                // TODO 取消未支付的订单
                 $this->app->event->trigger('PluginPaymentCancel', $order);
                 $this->success('取消未支付的订单成功！');
             } else {

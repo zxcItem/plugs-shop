@@ -1,39 +1,39 @@
 <?php
 
+declare (strict_types=1);
 
 namespace plugin\shop\model;
-
 
 use think\model\relation\HasOne;
 
 /**
- * 商城用户评论
- * Class ShopActionComment
+ * 用户评论数据模型
+ * @class PluginShopUserActionComment
  * @package plugin\shop\model
  */
-class ShopActionComment extends AbsUser
+class PluginShopUserActionComment extends AbsUser
 {
     /**
      * 关联商品信息
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function goods(): HasOne
     {
-        return $this->hasOne(ShopGoods::class, 'code', 'gcode');
+        return $this->hasOne(PluginShopGoods::class, 'code', 'gcode');
     }
 
     /**
      * 关联订单数据
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function orderinfo(): HasOne
     {
-        return $this->hasOne(ShopOrder::class, 'order_no', 'order_no');
+        return $this->hasOne(PluginShopOrder::class, 'order_no', 'order_no');
     }
 
     /**
      * 绑定商品信息
-     * @return HasOne
+     * @return \think\model\relation\HasOne
      */
     public function bindGoods(): HasOne
     {

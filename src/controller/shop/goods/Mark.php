@@ -4,7 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop\goods;
 
-use plugin\shop\model\ShopGoodsMark;
+use plugin\shop\model\PluginShopGoodsMark;
 use think\admin\Controller;
 use think\admin\helper\QueryHelper;
 use think\db\exception\DataNotFoundException;
@@ -27,7 +27,7 @@ class Mark extends Controller
      */
     public function index()
     {
-        ShopGoodsMark::mQuery($this->get)->layTable(function () {
+        PluginShopGoodsMark::mQuery($this->get)->layTable(function () {
             $this->title = '商品标签管理';
         }, static function (QueryHelper $query) {
             $query->like('name')->equal('status')->dateBetween('create_time');
@@ -40,7 +40,7 @@ class Mark extends Controller
      */
     public function add()
     {
-        ShopGoodsMark::mForm('form');
+        PluginShopGoodsMark::mForm('form');
     }
 
     /**
@@ -49,7 +49,7 @@ class Mark extends Controller
      */
     public function edit()
     {
-        ShopGoodsMark::mForm('form');
+        PluginShopGoodsMark::mForm('form');
     }
 
     /**
@@ -58,7 +58,7 @@ class Mark extends Controller
      */
     public function state()
     {
-        ShopGoodsMark::mSave();
+        PluginShopGoodsMark::mSave();
     }
 
     /**
@@ -67,7 +67,7 @@ class Mark extends Controller
      */
     public function remove()
     {
-        ShopGoodsMark::mDelete();
+        PluginShopGoodsMark::mDelete();
     }
 
     /**

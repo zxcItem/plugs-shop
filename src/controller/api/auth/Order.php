@@ -4,16 +4,16 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\api\auth;
 
-use plugin\payment\service\BalanceService;
-use plugin\payment\service\IntegralService;
-use plugin\payment\model\PaymentAddress;
+use plugin\payment\service\Balance;
+use plugin\payment\service\Integral;
+use plugin\payment\model\PluginPaymentAddress;
 use plugin\payment\service\contract\PaymentResponse;
 use plugin\payment\service\Payment;
 use plugin\shop\controller\api\Auth;
-use plugin\shop\model\ShopOrder;
-use plugin\shop\model\ShopOrderCart;
-use plugin\shop\model\ShopOrderItem;
-use plugin\shop\model\ShopOrderSend;
+use plugin\shop\model\PluginShopOrder;
+use plugin\shop\model\PluginShopOrderCart;
+use plugin\shop\model\PluginShopOrderItem;
+use plugin\shop\model\PluginShopOrderSender;
 use plugin\shop\service\ConfigService;
 use plugin\shop\service\ExpressService;
 use plugin\shop\service\GoodsService;
@@ -43,7 +43,7 @@ class Order extends Auth
      */
     public function get()
     {
-        ShopOrder::mQuery(null, function (QueryHelper $query) {
+        PluginShopOrder::mQuery(null, function (QueryHelper $query) {
             if (empty(input('order_no'))) {
                 $query->with('items')->where(['refund_status' => 0]);
             } else {
@@ -70,8 +70,8 @@ class Order extends Auth
             $input = $this->_vali(['carts.default' => '', 'rules.default' => '', 'agent.default' => '0']);
             if (empty($input['rules']) && empty($input['carts'])) $this->error('参数无效！');
             // 生成统一编号
-            do $extra = ['order_no' => $order['order_no'] = CodeExtend::uniqidNumber(16, 'N')];
-            while (ShopOrder::mk()->master()->where($extra)->findOrEmpty()->isExists());
+            do $extra = ['order_no' => $order['order_no'] = CodeExtend::uniqidNumber(16, 'PT')];
+            while (PluginShopOrder::mk()->master()->where($extra)->findOrEmpty()->isExists());
             [$items, $deliveryType,$order['unid']] = [[], 0,$this->unid];
             // 组装订单数据
             foreach (GoodsService::parse($this->unid, trim($input['rules'], ':;'), $input['carts']) as $item) {
@@ -123,7 +123,7 @@ class Order extends Auth
             // 订单发货类型
             $order['status'] = $deliveryType ? 1 : 2;
             $order['delivery_type'] = $deliveryType;
-            $order['ratio_integral'] = IntegralService::ratio();
+            $order['ratio_integral'] = Integral::ratio();
             // 统计商品数量
             $order['number_goods'] = array_sum(array_column($items, 'stock_sales'));
             $order['number_express'] = array_sum(array_column($items, 'delivery_count'));
@@ -138,17 +138,17 @@ class Order extends Auth
                 $order['amount_reduct'] = $order['amount_goods'];
             }
             // 统计订单金额
-            $order['amount_real'] = $order['amount_discount'] - $order['amount_reduct'];
+            $order['amount_real'] = round($order['amount_discount'] - $order['amount_reduct'], 2);
             $order['amount_total'] = $order['amount_goods'];
-            $order['amount_profit'] = $order['amount_real'] - $order['amount_cost'];
+            $order['amount_profit'] = round($order['amount_real'] - $order['amount_cost']);
             // 写入商品数据
-            $model = ShopOrder::mk();
+            $model = PluginShopOrder::mk();
             $this->app->db->transaction(function () use ($order, $items, &$model) {
-                $model->save($order) && ShopOrderItem::mk()->saveAll($items);
+                $model->save($order) && PluginShopOrderItem::mk()->saveAll($items);
                 // 设置收货地址
                 if ($order['delivery_type']) {
                     $where = ['unid' => $this->unid, 'deleted' => 0];
-                    $address = PaymentAddress::mk()->where($where)->order('type desc,id desc')->findOrEmpty();
+                    $address = PluginPaymentAddress::mk()->where($where)->order('type desc,id desc')->findOrEmpty();
                     $address->isExists() && UserOrder::perfect($model->refresh(), $address);
                 }
             });
@@ -158,13 +158,15 @@ class Order extends Auth
             }
             // 清理购物车数据
             if (count($carts = str2arr($input['carts'])) > 0) {
-                ShopOrderCart::mk()->whereIn('id', $carts)->delete();
+                PluginShopOrderCart::mk()->whereIn('id', $carts)->delete();
                 UserAction::recount($this->unid);
             }
+            // TODO 触发订单创建事件
+            $this->app->event->trigger('PluginWemallOrderCreate', $order);
             // 无需发货且无需支付，直接完成支付流程
             if ($order['status'] === 2 && empty($order['amount_real'])) {
                 Payment::emptyPayment($this->account, $order['order_no']);
-                $this->success('下单成功！', ShopOrder::mk()->where(['order_no' => $order['order_no']])->findOrEmpty()->toArray());
+                $this->success('下单成功！', $model->toArray());
             }
             // 返回处理成功数据
             $this->success('下单成功！', array_merge($order, ['items' => $items]));
@@ -190,16 +192,16 @@ class Order extends Auth
 
         // 用户收货地址
         $map = ['unid' => $this->unid, 'id' => $data['address_id']];
-        $addr = PaymentAddress::mk()->where($map)->findOrEmpty();
+        $addr = PluginPaymentAddress::mk()->where($map)->findOrEmpty();
         if ($addr->isEmpty()) $this->error('地址异常！');
 
         // 订单状态检查
         $map = ['unid' => $this->unid, 'order_no' => $data['order_no']];
-        $tCount = intval(ShopOrderItem::mk()->where($map)->sum('delivery_count'));
+        $tCount = intval(PluginShopOrderItem::mk()->where($map)->sum('delivery_count'));
 
         // 根据地址计算运费
         $map = ['status' => 1, 'deleted' => 0, 'order_no' => $data['order_no']];
-        $tCode = ShopOrderItem::mk()->where($map)->column('delivery_code');
+        $tCode = PluginShopOrderItem::mk()->where($map)->column('delivery_code');
         [$amount, , , $remark] = ExpressService::amount($tCode, $addr['region_prov'], $addr['region_city'], $tCount);
         $this->success('计算运费！', ['amount' => $amount, 'remark' => $remark]);
     }
@@ -219,12 +221,12 @@ class Order extends Auth
 
         // 用户收货地址
         $where = ['id' => $data['address_id'], 'unid' => $this->unid, 'deleted' => 0];
-        $address = PaymentAddress::mk()->where($where)->findOrEmpty();
+        $address = PluginPaymentAddress::mk()->where($where)->findOrEmpty();
         if ($address->isEmpty()) $this->error('地址异常！');
 
         // 订单状态检查
         $where = ['unid' => $this->unid, 'order_no' => $data['order_no'], 'delivery_type' => 1];
-        $order = ShopOrder::mk()->where($where)->whereIn('status', [1, 2])->findOrEmpty();
+        $order = PluginShopOrder::mk()->where($where)->whereIn('status', [1, 2])->findOrEmpty();
         if ($order->isEmpty()) $this->error('不能修改！');
 
         // 更新订单收货地址
@@ -243,7 +245,7 @@ class Order extends Auth
     public function channel()
     {
         $this->success('获取支付通道！', [
-            'toratio'  => IntegralService::ratio(),
+            'toratio'  => Integral::ratio(),
             'channels' => Payment::typesByAccess($this->type, true),
         ]);
     }
@@ -289,7 +291,7 @@ class Order extends Auth
             if ($leaveAmount > 0 && $data['integral'] > 0) {
                 if (!ConfigService::get('enable_integral')) $this->error("已禁用积分抵扣！");
                 if ($data['integral'] > $order->getAttr('allow_integral')) $this->error("超出积分抵扣！");
-                if ($data['integral'] > IntegralService::recount($this->unid)['usable']) $this->error('账号积分不足！');
+                if ($data['integral'] > Integral::recount($this->unid)['usable']) $this->error('账号积分不足！');
                 $response = Payment::mk(payment::INTEGRAL)->create($this->account, $data['order_no'], '积分抵扣', $orderAmount, $data['integral']);
                 if (($leaveAmount = Payment::leaveAmount($data['order_no'], $orderAmount)) <= 0) $this->success('已完成支付！', $response->toArray());
             }
@@ -348,9 +350,9 @@ class Order extends Auth
                 'cancel_remark' => '用户主动取消订单！',
             ];
             if ($order->save($data) && UserOrder::stock($order->getAttr('order_no'))) {
-                // 触发订单取消事件
+                // TODO 触发订单取消事件
                 Payment::refund($order->getAttr('order_no'));
-                $this->app->event->trigger('PluginPaymentCancel', $order);
+                $this->app->event->trigger('PluginWemallOrderCancel', $order);
                 // 返回处理成功数据
                 $this->success('取消成功！');
             } else {
@@ -376,7 +378,7 @@ class Order extends Auth
                 'deleted_status' => 1,
                 'deleted_remark' => '用户主动删除订单！',
             ])) {
-                // 触发订单删除事件
+                // todo 触发订单删除事件
                 $this->app->event->trigger('PluginWemallOrderRemove', $order);
                 // 返回处理成功数据
                 $this->success('删除成功！');
@@ -395,13 +397,47 @@ class Order extends Auth
     public function confirm()
     {
         $order = $this->getOrderModel();
-        if ($order->getAttr('status') == 5 && $order->save(['status' => 6])) {
+        if (in_array($order->getAttr('status'), [5, 6])) {
             // 触发订单确认事件
-            $this->app->event->trigger('PluginWeMallOrderConfirm', $order);
+            $order->save([
+                'status'         => 6,
+                'confirm_time'   => date('Y-m-d H:i:s'),
+                'confirm_remark' => '用户主动确认签收订单！',
+            ]);
+            // todo 订单确认收货
+            $this->app->event->trigger('PluginWemallOrderConfirm', $order);
             // 返回处理成功数据
             $this->success('确认成功！');
         } else {
             $this->error('确认失败！');
+        }
+    }
+
+    /**
+     * 提交订单评论
+     * @return void
+     */
+    public function comment()
+    {
+        $order = $this->getOrderModel();
+        if (in_array($order->getAttr('status'), [6, 7])) try {
+            // 接收评论数据
+            $items = json_decode($this->request->post('data'), true);
+            $this->app->db->transaction(function () use ($order, $items) {
+                $order->save(['status' => 7]);
+                $order->items()->select()->map(function (PluginshopOrderItem $item) use ($items) {
+                    if (!empty($input = $items[$item->getAttr('ghash')])) {
+                        UserAction::comment($item, $input['rate'], $input['content'], $input['images']);
+                    }
+                });
+            });
+            $this->success('评论成功！');
+        } catch (HttpResponseException $exception) {
+            throw $exception;
+        } catch (\Exception $exception) {
+            $this->error($exception->getMessage());
+        } else {
+            $this->error('无需评论！');
         }
     }
 
@@ -412,7 +448,7 @@ class Order extends Auth
     public function total()
     {
         $data = ['t0' => 0, 't1' => 0, 't2' => 0, 't3' => 0, 't4' => 0, 't5' => 0, 't6' => 0, 't7' => 0];
-        $query = ShopOrder::mk()->where(['unid' => $this->unid, 'refund_status' => 0, 'deleted_status' => 0]);
+        $query = PluginShopOrder::mk()->where(['unid' => $this->unid, 'refund_status' => 0, 'deleted_status' => 0]);
         foreach ($query->field('status,count(1) count')->group('status')->cursor() as $item) {
             $data["t{$item['status']}"] = $item['count'];
         }
@@ -441,12 +477,12 @@ class Order extends Auth
 
     /**
      * 获取输入订单模型
-     * @return ShopOrder
+     * @return PluginShopOrder
      */
-    private function getOrderModel(): ShopOrder
+    private function getOrderModel(): PluginShopOrder
     {
         $map = $this->_vali(['unid.value' => $this->unid, 'order_no.require' => '单号不能为空']);
-        $order = ShopOrder::mk()->where($map)->findOrEmpty();
+        $order = PluginShopOrder::mk()->where($map)->findOrEmpty();
         if ($order->isEmpty()) $this->error('读取订单失败！');
         return $order;
     }
