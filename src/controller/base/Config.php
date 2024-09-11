@@ -56,7 +56,7 @@ class Config extends Controller
         $this->vo = ConfigService::get();
         if ($this->request->isGet()) {
             $this->enableAndroid = !!Account::field(Account::ANDROID);
-            $this->fetch('index_params');
+            $this->fetch('');
         } else {
             ConfigService::set(array_merge($this->vo, $this->request->post()));
             $this->success('配置更新成功！');

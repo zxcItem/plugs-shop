@@ -4,9 +4,11 @@ declare (strict_types=1);
 
 namespace plugin\shop;
 
-use plugin\payment\model\PaymentRecord;
+use plugin\payment\model\PluginPaymentRecord;
+use plugin\payment\service\Payment;
 use plugin\shop\command\Clear;
-use plugin\shop\model\ShopOrder;
+use plugin\account\Service as AccountService;
+use plugin\payment\Service as PaymentService;
 use plugin\shop\service\UserOrder;
 use think\admin\Plugin;
 
@@ -38,25 +40,25 @@ class Service extends Plugin
         $this->commands([Clear::class]);
 
         // 注册支付审核事件
-        $this->app->event->listen('PluginPaymentAudit', function (PaymentRecord $payment) {
+        $this->app->event->listen('PluginPaymentAudit', function (PluginPaymentRecord $payment) {
             $this->app->log->notice("Event PluginPaymentAudit {$payment->getAttr('order_no')}");
             UserOrder::change($payment->getAttr('order_no'), $payment);
         });
 
         // 注册支付拒审事件
-        $this->app->event->listen('PluginPaymentRefuse', function (PaymentRecord $payment) {
+        $this->app->event->listen('PluginPaymentRefuse', function (PluginPaymentRecord $payment) {
             $this->app->log->notice("Event PluginPaymentRefuse {$payment->getAttr('order_no')}");
             UserOrder::change($payment->getAttr('order_no'), $payment);
         });
 
         // 注册支付完成事件
-        $this->app->event->listen('PluginPaymentSuccess', function (PaymentRecord $payment) {
+        $this->app->event->listen('PluginPaymentSuccess', function (PluginPaymentRecord $payment) {
             $this->app->log->notice("Event PluginPaymentSuccess {$payment->getAttr('order_no')}");
             UserOrder::change($payment->getAttr('order_no'), $payment);
         });
 
         // 注册支付取消事件
-        $this->app->event->listen('PluginPaymentCancel', function (PaymentRecord $payment) {
+        $this->app->event->listen('PluginPaymentCancel', function (PluginPaymentRecord $payment) {
             $this->app->log->notice("Event PluginPaymentCancel {$payment->getAttr('order_no')}");
             UserOrder::change($payment->getAttr('order_no'), $payment);
         });
@@ -70,14 +72,12 @@ class Service extends Plugin
     {
         $code = app(static::class)->appCode;
         // 设置插件菜单
-        return [
+        return array_merge(array_merge(AccountService::menu(), [
             [
                 'name' => '商城配置',
                 'subs' => [
                     ['name' => '商城参数管理', 'icon' => 'layui-icon layui-icon-set', 'node' => "{$code}/base.config/index"],
-                    ['name' => '邀请海报设置', 'icon' => 'layui-icon layui-icon-cols', 'node' => "{$code}/base.poster/index"],
                     ['name' => '系统通知管理', 'icon' => 'layui-icon layui-icon-notice', 'node' => "{$code}/base.notify/index"],
-                    ['name' => '文章内容管理', 'icon' => 'layui-icon layui-icon-read', 'node' => "{$code}/base.news/index"],
                     ['name' => '快递公司管理', 'icon' => 'layui-icon layui-icon-website', 'node' => "{$code}/base.express.company/index"],
                     ['name' => '邮费模板管理', 'icon' => 'layui-icon layui-icon-template-1', 'node' => "{$code}/base.express.template/index"],
                 ]
@@ -92,6 +92,6 @@ class Service extends Plugin
                     ['name' => '商品评论管理', 'icon' => 'layui-icon layui-icon-util', 'node' => "{$code}/shop.reply/index"],
                 ],
             ]
-        ];
+        ]),PaymentService::menu());
     }
 }
