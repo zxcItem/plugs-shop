@@ -1,7 +1,5 @@
 <?php
 
-use plugin\shop\Service;
-use think\admin\extend\PhinxExtend;
 use think\migration\Migrator;
 
 /**
