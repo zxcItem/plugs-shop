@@ -72,7 +72,7 @@ class Service extends Plugin
     {
         $code = app(static::class)->appCode;
         // 设置插件菜单
-        return array_merge(array_merge(AccountService::menu(), [
+        return [
             [
                 'name' => '商城配置',
                 'subs' => [
@@ -92,6 +92,6 @@ class Service extends Plugin
                     ['name' => '商品评论管理', 'icon' => 'layui-icon layui-icon-util', 'node' => "{$code}/shop.reply/index"],
                 ],
             ]
-        ]),PaymentService::menu());
+        ];
     }
 }
