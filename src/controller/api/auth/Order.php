@@ -300,7 +300,7 @@ class Order extends Auth
             if ($leaveAmount > 0 && $data['balance'] > 0) {
                 if (!ConfigService::get('enable_balance')) $this->error("已禁用余额支付！");
                 if ($data['balance'] > $order->getAttr('allow_balance')) $this->error("超出余额限额！");
-                if ($data['balance'] > BalanceService::recount($this->unid)['usable']) $this->error('账号余额不足！');
+                if ($data['balance'] > Balance::recount($this->unid)['usable']) $this->error('账号余额不足！');
                 $response = Payment::mk(Payment::BALANCE)->create($this->account, $data['order_no'], '余额支付', $orderAmount, $data['balance']);
                 if (($leaveAmount = Payment::leaveAmount($data['order_no'], $orderAmount)) <= 0) $this->success('已完成支付！', $response->toArray());
             }
