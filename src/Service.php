@@ -5,10 +5,7 @@ declare (strict_types=1);
 namespace plugin\shop;
 
 use plugin\payment\model\PluginPaymentRecord;
-use plugin\payment\service\Payment;
 use plugin\shop\command\Clear;
-use plugin\account\Service as AccountService;
-use plugin\payment\Service as PaymentService;
 use plugin\shop\service\UserOrder;
 use think\admin\Plugin;
 

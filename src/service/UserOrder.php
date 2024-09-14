@@ -7,10 +7,7 @@ namespace plugin\shop\service;
 
 use plugin\payment\model\PluginPaymentAddress;
 use plugin\payment\model\PluginPaymentRecord;
-use plugin\payment\service\Balance;
-use plugin\payment\service\Integral;
 use plugin\payment\service\Payment;
-
 use plugin\shop\model\PluginShopOrder;
 use plugin\shop\model\PluginShopOrderItem;
 use plugin\shop\model\PluginShopOrderSender;

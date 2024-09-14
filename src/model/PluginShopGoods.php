@@ -6,7 +6,6 @@ namespace plugin\shop\model;
 
 use plugin\account\model\Abs;
 use think\model\relation\HasMany;
-use think\model\relation\HasOne;
 
 /**
  * 商城商品数据数据

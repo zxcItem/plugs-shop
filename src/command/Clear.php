@@ -1,6 +1,5 @@
 <?php
 
-
 declare (strict_types=1);
 
 namespace plugin\shop\command;
@@ -11,7 +10,6 @@ use plugin\shop\service\ConfigService;
 use plugin\shop\service\UserAction;
 use plugin\shop\service\UserOrder;
 use think\admin\Command;
-use think\admin\Exception;
 use think\console\Input;
 use think\console\Output;
 

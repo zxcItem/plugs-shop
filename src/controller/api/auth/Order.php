@@ -4,8 +4,8 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\api\auth;
 
-use plugin\payment\service\Balance;
-use plugin\payment\service\Integral;
+use plugin\fund\service\Balance;
+use plugin\fund\service\Integral;
 use plugin\payment\model\PluginPaymentAddress;
 use plugin\payment\service\contract\PaymentResponse;
 use plugin\payment\service\Payment;
@@ -13,7 +13,6 @@ use plugin\shop\controller\api\Auth;
 use plugin\shop\model\PluginShopOrder;
 use plugin\shop\model\PluginShopOrderCart;
 use plugin\shop\model\PluginShopOrderItem;
-use plugin\shop\model\PluginShopOrderSender;
 use plugin\shop\service\ConfigService;
 use plugin\shop\service\ExpressService;
 use plugin\shop\service\GoodsService;

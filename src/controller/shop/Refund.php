@@ -4,6 +4,7 @@ declare (strict_types=1);
 
 namespace plugin\shop\controller\shop;
 
+use plugin\coupon\service\UserCoupon;
 use plugin\payment\model\PluginPaymentRecord;
 use plugin\payment\service\Payment;
 use plugin\shop\model\PluginShopOrderRefund;
@@ -17,7 +18,6 @@ use think\db\exception\DbException;
 use think\db\exception\ModelNotFoundException;
 use think\db\Query;
 use think\exception\HttpResponseException;
-use WeChat\Pay;
 
 /**
  * 售后订单管理
@@ -106,7 +106,7 @@ class Refund extends Controller
                             $map = ['code' => $pcode, 'channel_type' => Payment::COUPON];
                             $coupon = PluginPaymentRecord::mk()->where($map)->findOrEmpty()->toArray();
                             // TODO 优惠券处理
-//                            empty($coupon) || UserCoupon::resume($coupon['payment_trade']);
+                            empty($coupon) || UserCoupon::resume($coupon['payment_trade']);
                             $amount = floatval($coupon['payment_amount']);
                         } else {
                             $rcode = $refund->getAttr('payment_code') ?: Payment::withRefundCode();

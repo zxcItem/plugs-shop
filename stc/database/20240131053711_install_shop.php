@@ -50,7 +50,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-配置-通知
      * @class PluginShopConfigNotify
      * @table plugin_shop_config_notify
      * @return void
@@ -95,7 +95,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 数据-快递-公司
      * @class PluginShopExpressCompany
      * @table plugin_shop_express_company
      * @return void
@@ -134,7 +134,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 数据-快递-模板
      * @class PluginShopExpressTemplate
      * @table plugin_shop_express_template
      * @return void
@@ -175,7 +175,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-商品-内容
      * @class PluginShopGoods
      * @table plugin_shop_goods
      * @return void
@@ -240,7 +240,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-商品-分类
      * @class PluginShopGoodsCate
      * @table plugin_shop_goods_cate
      * @return void
@@ -278,7 +278,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-商品-规格
      * @class PluginShopGoodsItem
      * @table plugin_shop_goods_item
      * @return void
@@ -327,7 +327,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-商品-标签
      * @class PluginShopGoodsMark
      * @table plugin_shop_goods_mark
      * @return void
@@ -360,7 +360,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-商品-库存
      * @class PluginShopGoodsStock
      * @table plugin_shop_goods_stock
      * @return void
@@ -398,7 +398,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-订单-内容
      * @class PluginShopOrder
      * @table plugin_shop_order
      * @return void
@@ -484,7 +484,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-订单-购物车
      * @class PluginShopOrderCart
      * @table plugin_shop_order_cart
      * @return void
@@ -522,7 +522,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-订单-商品
      * @class PluginShopOrderItem
      * @table plugin_shop_order_item
      * @return void
@@ -596,7 +596,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-订单-售后
      * @class PluginShopOrderRefund
      * @table plugin_shop_order_refund
      * @return void
@@ -655,7 +655,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-订单-配送
      * @class PluginShopOrderSender
      * @table plugin_shop_order_sender
      * @return void
@@ -713,7 +713,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-用户-收藏
      * @class PluginShopUserActionCollect
      * @table plugin_shop_user_action_collect
      * @return void
@@ -747,7 +747,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-用户-评论
      * @class PluginShopUserActionComment
      * @table plugin_shop_user_action_comment
      * @return void
@@ -794,7 +794,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-用户-足迹
      * @class PluginShopUserActionHistory
      * @table plugin_shop_user_action_history
      * @return void
@@ -830,7 +830,7 @@ class InstallShop extends Migrator
     }
 
     /**
-     * 创建数据对象
+     * 商城-用户-搜索
      * @class PluginShopUserActionSearch
      * @table plugin_shop_user_action_search
      * @return void

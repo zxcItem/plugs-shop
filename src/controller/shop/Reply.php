@@ -1,6 +1,5 @@
 <?php
 
-
 declare (strict_types=1);
 
 namespace plugin\shop\controller\shop;
@@ -14,7 +13,7 @@ use think\admin\helper\QueryHelper;
 /**
  * 商品评论管理
  * @class Reply
- * @package plugin\wemall\controller\shop
+ * @package plugin\shop\controller\shop
  */
 class Reply extends Controller
 {

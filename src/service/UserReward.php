@@ -1,12 +1,11 @@
 <?php
 
-
 declare (strict_types=1);
 
 namespace plugin\shop\service;
 
-use plugin\payment\service\Balance;
-use plugin\payment\service\Integral;
+use plugin\fund\service\Balance;
+use plugin\fund\service\Integral;
 use plugin\shop\model\PluginShopOrder;
 use think\admin\Exception;
 

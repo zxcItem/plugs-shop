@@ -12,11 +12,7 @@ use plugin\shop\model\PluginShopGoodsMark;
 use plugin\shop\model\PluginShopUserActionSearch;
 use plugin\shop\service\ExpressService;
 use think\admin\Controller;
-use think\admin\Exception;
 use think\admin\helper\QueryHelper;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 use think\db\Query;
 
 /**
